@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OTT 签名链接生成器1</title>
+<title>OTT 签名链接生成器</title>
 <style>
   body {
     font-family: system-ui, sans-serif;
@@ -17,12 +17,13 @@
     border-radius: 6px; border: 1px solid #ccc;
   }
   button { background: #0078ff; color: #fff; cursor: pointer; }
-  pre {
+  .output-box {
+    position: relative;
     background: #f6f6f6;
     padding: 1em;
     border-radius: 8px;
     word-wrap: break-word;
-    position: relative;
+    margin-top: 1em;
   }
   #copyBtn {
     position: absolute;
@@ -31,18 +32,16 @@
     background: #4caf50;
     border: none;
     color: #fff;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.9em;
+    display: none;
   }
 </style>
 </head>
 <body>
-<h1>🔐 OTT 链接签名生成器</h1>
-
-<label>签名密钥 (SIGN_SECRET)</label>
-<input id="secret" value="mySuperSecretKey">
+<h1>🔐 OTT 签名链接生成器</h1>
 
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
@@ -50,34 +49,34 @@
 <label>过期日期时间 (本地时间)</label>
 <input id="exp" type="datetime-local">
 
-<label>Worker 域名</label>
-<input id="domain" value="https://powertech.ott-1f4.workers.dev/">
-
 <button onclick="generate()">生成签名链接</button>
 
 <h3>✅ 生成结果</h3>
-<pre id="output">(结果将显示在这里)
-  <button id="copyBtn" style="display:none;" onclick="copyLink()">复制</button>
-</pre>
+<div class="output-box">
+  <button id="copyBtn" onclick="copyLink()">复制</button>
+  <pre id="output">(结果将显示在这里)</pre>
+</div>
 
 <script>
+// ⚙️ 固定配置
+const SIGN_SECRET = "mySuperSecretKey"; // 请替换
+const WORKER_DOMAIN = "https://powertech.ott-1f4.workers.dev/";
+
 async function generate() {
   const uid = document.getElementById("uid").value.trim();
-  const secret = document.getElementById("secret").value.trim();
   const expStr = document.getElementById("exp").value;
-  const domain = document.getElementById("domain").value.trim();
-
-  if (!uid || !secret || !expStr || !domain) {
+  if (!uid || !expStr) {
     alert("请填写所有字段！");
     return;
   }
 
-  const exp = new Date(expStr).getTime(); // 转换为毫秒时间戳
+  const exp = new Date(expStr).getTime();
   const text = `${uid}:${exp}`;
-  const sig = await hmacSHA256(text, secret);
-  const url = `${domain}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
+  const sig = await hmacSHA256(text, SIGN_SECRET);
+  const url = `${WORKER_DOMAIN}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
 
-  document.getElementById("output").textContent = url;
+  const output = document.getElementById("output");
+  output.textContent = url;
   document.getElementById("copyBtn").style.display = "inline-block";
 }
 
@@ -93,21 +92,44 @@ async function hmacSHA256(text, secret) {
   return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// 🔗 一键复制功能
-async function copyLink() {
+// ✅ 兼容手机的复制实现
+function copyLink() {
   const text = document.getElementById("output").textContent.trim();
   if (!text || text.startsWith("(结果")) {
     alert("没有可复制的链接！");
     return;
   }
-  await navigator.clipboard.writeText(text);
+
+  // 优先使用 Clipboard API
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => showCopied());
+  } else {
+    // 兼容旧版浏览器
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand("copy");
+      showCopied();
+    } catch (err) {
+      alert("复制失败，请手动复制。");
+    }
+    document.body.removeChild(textarea);
+  }
+}
+
+function showCopied() {
   const btn = document.getElementById("copyBtn");
   btn.textContent = "✅ 已复制";
   btn.style.background = "#2e7d32";
   setTimeout(() => {
     btn.textContent = "复制";
     btn.style.background = "#4caf50";
-  }, 2000);
+  }, 1500);
 }
 </script>
 </body>
