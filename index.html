@@ -106,7 +106,7 @@ async function makeShort() {
 
   const idSuffix = Math.floor(1000 + Math.random() * 9000);
   const path = `id${idSuffix}`;
-  const proxyWorker = "https://shortlink-proxy.ott-1f4.workers.dev"; // 你的代理 Worker
+  const proxyWorker = "https://links-50m.pages.dev/"; // 你的代理 Worker
 
   try {
     const res = await fetch(`${proxyWorker}?url=${encodeURIComponent(original)}&path=${path}`);
