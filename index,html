@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTT 签名链接生成器</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    padding: 2em;
+    max-width: 600px;
+    margin: auto;
+  }
+  label { display: block; margin-top: 1em; font-weight: bold; }
+  input, button {
+    width: 100%; padding: .5em; margin-top: .3em;
+    border-radius: 6px; border: 1px solid #ccc;
+  }
+  button { background: #0078ff; color: #fff; cursor: pointer; }
+  pre { background: #f6f6f6; padding: 1em; border-radius: 8px; word-wrap: break-word; }
+</style>
+</head>
+<body>
+<h1>🔐 OTT 链接签名生成器</h1>
+
+<label>签名密钥 (SIGN_SECRET)</label>
+<input id="secret" value="mySuperSecretKey">
+
+<label>用户 UID</label>
+<input id="uid" placeholder="例如 user123">
+
+<label>过期日期时间 (本地时间)</label>
+<input id="exp" type="datetime-local">
+
+<label>Worker 域名</label>
+<input id="domain" value="https://powertech.ott-1f4.workers.dev/">
+
+<button onclick="generate()">生成签名链接</button>
+
+<h3>✅ 生成结果</h3>
+<pre id="output">(结果将显示在这里)</pre>
+
+<script>
+async function generate() {
+  const uid = document.getElementById("uid").value.trim();
+  const secret = document.getElementById("secret").value.trim();
+  const expStr = document.getElementById("exp").value;
+  const domain = document.getElementById("domain").value.trim();
+
+  if (!uid || !secret || !expStr || !domain) {
+    alert("请填写所有字段！");
+    return;
+  }
+
+  const exp = new Date(expStr).getTime(); // 转换为毫秒时间戳
+  const text = `${uid}:${exp}`;
+  const sig = await hmacSHA256(text, secret);
+  const url = `${domain}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
+
+  document.getElementById("output").textContent = url;
+}
+
+async function hmacSHA256(text, secret) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+</script>
+</body>
+</html>
