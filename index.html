@@ -1,124 +1,76 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OTT 访问签名生成器</title>
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: #0d1117;
-      color: #c9d1d9;
-      padding: 2em;
-      line-height: 1.6;
-    }
-    h1 { color: #58a6ff; }
-    label { display: block; margin-top: 1em; }
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: none;
-      background: #161b22;
-      color: #c9d1d9;
-    }
-    button {
-      margin-top: 1.2em;
-      padding: 10px 20px;
-      background: #238636;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover { background: #2ea043; }
-    pre {
-      background: #161b22;
-      padding: 1em;
-      border-radius: 8px;
-      margin-top: 1em;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    #copyBtn {
-      display: none;
-      background: #1f6feb;
-    }
-    #copyBtn:hover {
-      background: #388bfd;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTT 签名链接生成器</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    padding: 2em;
+    max-width: 600px;
+    margin: auto;
+  }
+  label { display: block; margin-top: 1em; font-weight: bold; }
+  input, button {
+    width: 100%; padding: .5em; margin-top: .3em;
+    border-radius: 6px; border: 1px solid #ccc;
+  }
+  button { background: #0078ff; color: #fff; cursor: pointer; }
+  pre { background: #f6f6f6; padding: 1em; border-radius: 8px; word-wrap: break-word; }
+</style>
 </head>
 <body>
+<h1>🔐 OTT 链接签名生成器</h1>
 
-  <h1>🔐 OTT 签名链接生成器</h1>
-  <p>生成可访问 Cloudflare Worker 的安全链接（带 UID、过期时间与签名）。</p>
+<label>签名密钥 (SIGN_SECRET)</label>
+<input id="secret" value="mySuperSecretKey">
 
-  <label>UID（用户唯一 ID）</label>
-  <input id="uid" placeholder="例如：user001">
+<label>用户 UID</label>
+<input id="uid" placeholder="例如 user123">
 
-  <label>到期时间（本地时间）</label>
-  <input id="exp" type="datetime-local">
+<label>过期日期时间 (本地时间)</label>
+<input id="exp" type="datetime-local">
 
-  <label>Worker 地址</label>
-  <input id="worker" value="https://powertech.ott-1f4.workers.dev/">
+<label>Worker 域名</label>
+<input id="domain" value="https://powertech.ott-1f4.workers.dev/">
 
-  <label>签名密钥（需与 Worker 中 env.SIGN_SECRET_GLOBAL 一致）</label>
-  <input id="secret" type="password" value="mySuperSecretKey">
+<button onclick="generate()">生成签名链接</button>
 
-  <button onclick="generate()">生成签名链接</button>
-  <button id="copyBtn" onclick="copyLink()">📋 复制链接</button>
+<h3>✅ 生成结果</h3>
+<pre id="output">(结果将显示在这里)</pre>
 
-  <pre id="output"></pre>
+<script>
+async function generate() {
+  const uid = document.getElementById("uid").value.trim();
+  const secret = document.getElementById("secret").value.trim();
+  const expStr = document.getElementById("exp").value;
+  const domain = document.getElementById("domain").value.trim();
 
-  <script>
-    let lastLink = "";
+  if (!uid || !secret || !expStr || !domain) {
+    alert("请填写所有字段！");
+    return;
+  }
 
-    async function generate() {
-      const uid = document.getElementById("uid").value.trim();
-      const expInput = document.getElementById("exp").value;
-      const worker = document.getElementById("worker").value.trim().replace(/\/+$/, '');
-      const secret = document.getElementById("secret").value.trim();
+  const exp = new Date(expStr).getTime(); // 转换为毫秒时间戳
+  const text = `${uid}:${exp}`;
+  const sig = await hmacSHA256(text, secret);
+  const url = `${domain}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
 
-      if (!uid || !expInput || !secret) {
-        alert("⚠️ 请填写 UID、到期时间 和 密钥！");
-        return;
-      }
+  document.getElementById("output").textContent = url;
+}
 
-      const exp = new Date(expInput).getTime(); // 转毫秒时间戳
-      const text = `${uid}:${exp}`;
-      const sig = await sign(text, secret);
-      const url = `${worker}/playlist.m3u8?uid=${uid}&exp=${exp}&sig=${sig}`;
-      lastLink = url;
-
-      document.getElementById("output").textContent =
-        `✅ 签名生成成功\n\n链接：\n${url}\n\nUID: ${uid}\n过期时间: ${new Date(exp).toLocaleString()}\n签名: ${sig}`;
-      document.getElementById("copyBtn").style.display = "inline-block";
-    }
-
-    async function sign(text, secret) {
-      const key = await crypto.subtle.importKey(
-        "raw",
-        new TextEncoder().encode(secret),
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-      );
-      const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
-      return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, "0")).join("");
-    }
-
-    async function copyLink() {
-      if (!lastLink) return;
-      await navigator.clipboard.writeText(lastLink);
-      const btn = document.getElementById("copyBtn");
-      btn.textContent = "✅ 已复制";
-      setTimeout(() => { btn.textContent = "📋 复制链接"; }, 2000);
-    }
-  </script>
-
+async function hmacSHA256(text, secret) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+</script>
 </body>
 </html>
