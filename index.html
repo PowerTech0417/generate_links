@@ -3,34 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OTT 签名短链生成器（随机ID版）</title>
+<title>OTT 签名链接生成器 + 短网址</title>
 <style>
-  body { font-family: system-ui, sans-serif; padding: 2em; max-width: 600px; margin: auto; }
-  h1 { text-align: center; }
+  body {
+    font-family: system-ui, sans-serif;
+    padding: 2em;
+    max-width: 600px;
+    margin: auto;
+  }
   label { display: block; margin-top: 1em; font-weight: bold; }
   input, button {
     width: 100%; padding: .6em; margin-top: .3em;
-    border-radius: 8px; border: 1px solid #ccc; font-size: 1em;
+    border-radius: 6px; border: 1px solid #ccc;
   }
-  #generateBtn {
+  button {
     background: #0078ff; color: #fff; cursor: pointer;
-    font-size: 1.2em; font-weight: bold; margin-top: 1.5em;
-    padding: 0.8em; transition: background 0.2s ease;
+    font-size: 1.1em; font-weight: 600;
   }
-  #generateBtn:hover { background: #005fcc; }
+  button.copy {
+    background: #555;
+  }
+  button.short {
+    background: #28a745;
+    margin-top: 10px;
+  }
   pre {
-    background: #f6f6f6; padding: 1em; border-radius: 8px;
-    word-wrap: break-word; margin-top: 1em;
+    background: #f6f6f6; padding: 1em;
+    border-radius: 8px; word-wrap: break-word;
   }
-  #copyBtn {
-    display: none; margin-top: 1em; width: auto; padding: 10px 24px;
-    border-radius: 6px; background: #4caf50; border: none; color: white;
-    font-size: 1em; cursor: pointer; display: block; margin-left: auto; margin-right: auto;
+  small {
+    color: #888;
   }
 </style>
 </head>
 <body>
-<h1>🔐 OTT 签名短链生成器</h1>
+<h1>🔐 OTT 签名链接生成器</h1>
+
+<!-- 已隐藏密钥与 Worker -->
+<input id="secret" type="hidden" value="mySuperSecretKey">
+<input id="domain" type="hidden" value="https://powertech.ott-1f4.workers.dev/">
 
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
@@ -38,90 +49,83 @@
 <label>过期日期时间 (本地时间)</label>
 <input id="exp" type="datetime-local">
 
-<button id="generateBtn" onclick="generate()">生成签名短链接</button>
+<button onclick="generate()">🚀 生成签名链接</button>
 
-<h3>✅ 生成结果</h3>
+<h3>✅ 签名结果</h3>
 <pre id="output">(结果将显示在这里)</pre>
-<button id="copyBtn" onclick="copyLink()">复制短网址</button>
+<button class="copy" onclick="copyLink()">📋 复制链接</button>
+
+<!-- 独立短网址生成按钮 -->
+<button class="short" onclick="makeShort()">⚡ 生成短网址</button>
+
+<pre id="shortOutput">(短网址将显示在这里)</pre>
 
 <script>
-// 固定配置
-const SIGN_SECRET = "mySuperSecretKey";
-const WORKER_DOMAIN = "https://powertech.ott-1f4.workers.dev/";
-const SHORTIO_API_KEY = "pk_1x1NMq5cuSHbYAPJ"; // ⚠️ 你的 Short.io API Key
-const SHORT_DOMAIN = "short.io"; // ⚠️ 替换为你绑定的 Short.io 域名
-const PREFIX = "id"; // 自定义路径前缀
-
-function random4Digits() {
-  return Math.floor(1000 + Math.random() * 9000).toString(); // 1000-9999
-}
-
 async function generate() {
   const uid = document.getElementById("uid").value.trim();
+  const secret = document.getElementById("secret").value.trim();
   const expStr = document.getElementById("exp").value;
-  if (!uid || !expStr) return alert("请填写所有字段！");
+  const domain = document.getElementById("domain").value.trim();
+
+  if (!uid || !secret || !expStr || !domain) {
+    alert("请填写所有字段！");
+    return;
+  }
 
   const exp = new Date(expStr).getTime();
   const text = `${uid}:${exp}`;
-  const sig = await hmacSHA256(text, SIGN_SECRET);
-  const longUrl = `${WORKER_DOMAIN}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
+  const sig = await hmacSHA256(text, secret);
+  const url = `${domain}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
 
-  document.getElementById("output").textContent = "⏳ 正在生成短网址...";
-
-  const path = `${PREFIX}${random4Digits()}`; // 例如 id4829
-
-  try {
-    const shortUrl = await createShortUrl(longUrl, path);
-    document.getElementById("output").textContent = shortUrl;
-    document.getElementById("copyBtn").style.display = "block";
-  } catch (err) {
-    document.getElementById("output").textContent = "❌ 短网址生成失败：" + err.message;
-  }
-}
-
-async function createShortUrl(originalURL, path) {
-  const res = await fetch("https://api.short.io/links", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "authorization": SHORTIO_API_KEY
-    },
-    body: JSON.stringify({
-      domain: SHORT_DOMAIN,
-      originalURL,
-      path
-    })
-  });
-
-  if (!res.ok) throw new Error("API 响应错误 " + res.status);
-  const data = await res.json();
-  return data.shortURL;
+  document.getElementById("output").textContent = url;
 }
 
 async function hmacSHA256(text, secret) {
   const key = await crypto.subtle.importKey(
-    "raw", new TextEncoder().encode(secret),
+    "raw",
+    new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
-    false, ["sign"]
+    false,
+    ["sign"]
   );
   const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
   return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function copyLink() {
-  const text = document.getElementById("output").textContent.trim();
-  if (!text.startsWith("http")) return alert("没有可复制的链接！");
-  navigator.clipboard.writeText(text).then(() => showCopied());
+// 📋 复制功能
+async function copyLink() {
+  const text = document.getElementById("output").textContent;
+  if (!text.startsWith("http")) return alert("请先生成链接！");
+  await navigator.clipboard.writeText(text);
+  alert("✅ 已复制签名链接！");
 }
 
-function showCopied() {
-  const btn = document.getElementById("copyBtn");
-  btn.textContent = "✅ 已复制";
-  btn.style.background = "#2e7d32";
-  setTimeout(() => {
-    btn.textContent = "复制短网址";
-    btn.style.background = "#4caf50";
-  }, 1500);
+// ⚡ 生成短网址（通过 Worker 代理）
+async function makeShort() {
+  const original = document.getElementById("output").textContent.trim();
+  if (!original.startsWith("http")) {
+    alert("请先生成签名链接！");
+    return;
+  }
+
+  // 固定前缀 + 4 位随机数
+  const idSuffix = Math.floor(1000 + Math.random() * 9000);
+  const path = `id${idSuffix}`;
+
+  const proxyWorker = "https://shortlink-proxy.ott-1f4.workers.dev"; // 你部署的 Worker 域名
+  const res = await fetch(`${proxyWorker}?url=${encodeURIComponent(original)}&path=${path}`);
+
+  if (!res.ok) {
+    document.getElementById("shortOutput").textContent = "❌ 短网址生成失败";
+    return;
+  }
+
+  const data = await res.json();
+  if (data && data.shortURL) {
+    document.getElementById("shortOutput").textContent = data.shortURL;
+  } else {
+    document.getElementById("shortOutput").textContent = "❌ 短网址生成失败";
+  }
 }
 </script>
 </body>
