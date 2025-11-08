@@ -17,7 +17,25 @@
     border-radius: 6px; border: 1px solid #ccc;
   }
   button { background: #0078ff; color: #fff; cursor: pointer; }
-  pre { background: #f6f6f6; padding: 1em; border-radius: 8px; word-wrap: break-word; }
+  pre {
+    background: #f6f6f6;
+    padding: 1em;
+    border-radius: 8px;
+    word-wrap: break-word;
+    position: relative;
+  }
+  #copyBtn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #4caf50;
+    border: none;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+  }
 </style>
 </head>
 <body>
@@ -38,7 +56,9 @@
 <button onclick="generate()">生成签名链接</button>
 
 <h3>✅ 生成结果</h3>
-<pre id="output">(结果将显示在这里)</pre>
+<pre id="output">(结果将显示在这里)
+  <button id="copyBtn" style="display:none;" onclick="copyLink()">复制</button>
+</pre>
 
 <script>
 async function generate() {
@@ -58,6 +78,7 @@ async function generate() {
   const url = `${domain}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
 
   document.getElementById("output").textContent = url;
+  document.getElementById("copyBtn").style.display = "inline-block";
 }
 
 async function hmacSHA256(text, secret) {
@@ -70,6 +91,23 @@ async function hmacSHA256(text, secret) {
   );
   const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
   return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// 🔗 一键复制功能
+async function copyLink() {
+  const text = document.getElementById("output").textContent.trim();
+  if (!text || text.startsWith("(结果")) {
+    alert("没有可复制的链接！");
+    return;
+  }
+  await navigator.clipboard.writeText(text);
+  const btn = document.getElementById("copyBtn");
+  btn.textContent = "✅ 已复制";
+  btn.style.background = "#2e7d32";
+  setTimeout(() => {
+    btn.textContent = "复制";
+    btn.style.background = "#4caf50";
+  }, 2000);
 }
 </script>
 </body>
