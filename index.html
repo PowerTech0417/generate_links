@@ -10,41 +10,37 @@
     padding: 2em;
     max-width: 600px;
     margin: auto;
-    background: #f9fafb;
-  }
-  h1 {
-    text-align: center;
-    margin-bottom: 1.5em;
   }
   label { display: block; margin-top: 1em; font-weight: bold; }
   input, button {
-    width: 100%; padding: .6em; margin-top: .4em;
-    border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;
+    width: 100%; padding: .8em; margin-top: .5em;
+    border-radius: 8px; border: 1px solid #ccc;
+    font-size: 1em;
   }
   button {
-    background: #0078ff; color: #fff; cursor: pointer;
-    font-size: 1.1em; font-weight: bold; border: none;
+    background: #0078ff;
+    color: #fff;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: 0.2s;
   }
-  button:hover { background: #0066dd; }
+  button:hover { background: #005ccc; }
   pre {
-    background: #f6f6f6; padding: 1em; border-radius: 8px;
-    word-wrap: break-word; margin-top: 1em;
+    background: #f7f7f7;
+    padding: 1em;
+    border-radius: 8px;
+    word-break: break-all;
   }
-  .copy-btn {
-    margin-top: .5em;
-    background: #00b894;
-  }
-  .copy-btn:hover {
-    background: #009874;
-  }
+  .hidden { display: none; }
 </style>
 </head>
 <body>
+
 <h1>🔐 OTT 链接签名 + 短网址生成器</h1>
 
-<!-- 隐藏敏感配置 -->
-<input id="secret" type="hidden" value="mySuperSecretKey">
-<input id="domain" type="hidden" value="https://powertech.ott-1f4.workers.dev/">
+<!-- ✅ 隐藏的 Worker 和密钥 -->
+<input id="secret" value="mySuperSecretKey" class="hidden">
+<input id="domain" value="https://powertech.ott-1f4.workers.dev/" class="hidden">
 
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
@@ -52,39 +48,18 @@
 <label>过期日期时间 (本地时间)</label>
 <input id="exp" type="datetime-local">
 
-<button onclick="generate()">生成签名链接</button>
+<button onclick="generateFull()">🚀 生成签名并创建短网址</button>
 
-<h3>✅ 签名链接结果</h3>
-<pre id="output">(生成结果将显示在这里)</pre>
-<button class="copy-btn" onclick="copyText('output')">复制签名链接</button>
+<h3>📋 签名链接</h3>
+<pre id="output">(生成中...)</pre>
+<button id="copyLongBtn" class="hidden" onclick="copyToClipboard('output')">复制签名链接</button>
 
-<button style="margin-top:1.5em;background:#ff9800" onclick="makeShort()">生成短网址</button>
-
-<h3>🔗 短网址结果</h3>
-<pre id="shortOutput">(短网址将显示在这里)</pre>
-<button class="copy-btn" onclick="copyText('shortOutput')">复制短网址</button>
+<h3>🔗 短网址</h3>
+<pre id="shortOutput">(生成中...)</pre>
+<button id="copyShortBtn" class="hidden" onclick="copyToClipboard('shortOutput')">复制短网址</button>
 
 <script>
-async function generate() {
-  const uid = document.getElementById("uid").value.trim();
-  const secret = document.getElementById("secret").value.trim();
-  const expStr = document.getElementById("exp").value;
-  const domain = document.getElementById("domain").value.trim();
-
-  if (!uid || !secret || !expStr || !domain) {
-    alert("请填写所有字段！");
-    return;
-  }
-
-  const exp = new Date(expStr).getTime();
-  const text = `${uid}:${exp}`;
-  const sig = await hmacSHA256(text, secret);
-  const url = `${domain}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
-
-  document.getElementById("output").textContent = url;
-}
-
-// 🔐 生成签名
+// 🔹 HMAC 计算函数
 async function hmacSHA256(text, secret) {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -93,51 +68,59 @@ async function hmacSHA256(text, secret) {
     false,
     ["sign"]
   );
-  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(signature))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// 📋 复制文本
-function copyText(id) {
-  const text = document.getElementById(id).textContent;
-  navigator.clipboard.writeText(text)
-    .then(() => alert("✅ 已复制到剪贴板"))
-    .catch(() => alert("❌ 复制失败"));
-}
+// 🔹 自动生成签名 + 短网址
+async function generateFull() {
+  const uid = document.getElementById("uid").value.trim();
+  const secret = document.getElementById("secret").value.trim();
+  const domain = document.getElementById("domain").value.trim();
+  const expStr = document.getElementById("exp").value;
 
-// ✂️ 调用 Cloudflare Worker 生成短网址
-async function makeShort() {
-  const longURL = document.getElementById("output").textContent.trim();
-  if (!longURL || longURL.startsWith("(")) {
-    alert("请先生成签名链接！");
+  if (!uid || !expStr) {
+    alert("请填写 UID 和过期时间！");
     return;
   }
 
-  const workerURL = "https://short.links-a15.workers.dev/"; // 你的 Cloudflare Worker
+  const exp = new Date(expStr).getTime();
+  const text = `${uid}:${exp}`;
+  const sig = await hmacSHA256(text, secret);
+  const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
 
+  document.getElementById("output").textContent = longURL;
+  document.getElementById("copyLongBtn").classList.remove("hidden");
+
+  // 调用 Cloudflare Worker 创建短网址
   try {
-    const res = await fetch(workerURL, {
+    const res = await fetch("https://short.links-a15.workers.dev/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ longURL }),
+      body: JSON.stringify({ longURL })
     });
     const data = await res.json();
 
     if (data.shortURL) {
       document.getElementById("shortOutput").textContent = data.shortURL;
-    } else if (data.secureShortURL) {
-      document.getElementById("shortOutput").textContent = data.secureShortURL;
-    } else if (data.shortLink) {
-      document.getElementById("shortOutput").textContent = data.shortLink;
+      document.getElementById("copyShortBtn").classList.remove("hidden");
     } else {
-      document.getElementById("shortOutput").textContent =
-        "❌ 短网址生成失败：" + (data.error || "Unknown error");
+      document.getElementById("shortOutput").textContent = "❌ 短网址生成失败：" + (data.error || "未知错误");
     }
   } catch (err) {
     document.getElementById("shortOutput").textContent = "❌ 网络请求失败：" + err.message;
   }
+}
+
+// 🔹 复制功能
+function copyToClipboard(id) {
+  const text = document.getElementById(id).textContent.trim();
+  if (!text) return alert("无可复制的内容！");
+  navigator.clipboard.writeText(text).then(() => {
+    alert("✅ 已复制到剪贴板！");
+  }).catch(err => {
+    alert("❌ 复制失败：" + err);
+  });
 }
 </script>
 </body>
