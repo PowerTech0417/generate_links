@@ -17,8 +17,7 @@
     border-radius: 6px; border: 1px solid #ccc;
   }
   button { background: #0078ff; color: #fff; cursor: pointer; }
-  .output-box {
-    position: relative;
+  pre {
     background: #f6f6f6;
     padding: 1em;
     border-radius: 8px;
@@ -26,17 +25,19 @@
     margin-top: 1em;
   }
   #copyBtn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
+    display: none;
+    margin-top: 1em;
+    width: auto;
+    padding: 8px 20px;
+    border-radius: 6px;
     background: #4caf50;
     border: none;
-    color: #fff;
-    padding: 6px 12px;
-    border-radius: 5px;
+    color: white;
+    font-size: 1em;
     cursor: pointer;
-    font-size: 0.9em;
-    display: none;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
 </style>
 </head>
@@ -52,14 +53,12 @@
 <button onclick="generate()">生成签名链接</button>
 
 <h3>✅ 生成结果</h3>
-<div class="output-box">
-  <button id="copyBtn" onclick="copyLink()">复制</button>
-  <pre id="output">(结果将显示在这里)</pre>
-</div>
+<pre id="output">(结果将显示在这里)</pre>
+<button id="copyBtn" onclick="copyLink()">复制签名链接</button>
 
 <script>
-// ⚙️ 固定配置
-const SIGN_SECRET = "mySuperSecretKey"; // 请替换
+// 固定配置（隐藏）
+const SIGN_SECRET = "mySuperSecretKey";
 const WORKER_DOMAIN = "https://powertech.ott-1f4.workers.dev/";
 
 async function generate() {
@@ -75,9 +74,8 @@ async function generate() {
   const sig = await hmacSHA256(text, SIGN_SECRET);
   const url = `${WORKER_DOMAIN}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
 
-  const output = document.getElementById("output");
-  output.textContent = url;
-  document.getElementById("copyBtn").style.display = "inline-block";
+  document.getElementById("output").textContent = url;
+  document.getElementById("copyBtn").style.display = "block";
 }
 
 async function hmacSHA256(text, secret) {
@@ -92,7 +90,7 @@ async function hmacSHA256(text, secret) {
   return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// ✅ 兼容手机的复制实现
+// 📋 复制功能（兼容手机）
 function copyLink() {
   const text = document.getElementById("output").textContent.trim();
   if (!text || text.startsWith("(结果")) {
@@ -100,11 +98,9 @@ function copyLink() {
     return;
   }
 
-  // 优先使用 Clipboard API
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(text).then(() => showCopied());
   } else {
-    // 兼容旧版浏览器
     const textarea = document.createElement("textarea");
     textarea.value = text;
     textarea.style.position = "fixed";
@@ -127,7 +123,7 @@ function showCopied() {
   btn.textContent = "✅ 已复制";
   btn.style.background = "#2e7d32";
   setTimeout(() => {
-    btn.textContent = "复制";
+    btn.textContent = "复制签名链接";
     btn.style.background = "#4caf50";
   }, 1500);
 }
