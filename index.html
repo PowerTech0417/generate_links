@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OTT 签名链接生成器 + 短网址</title>
+<title>OTT 签名短链生成器（随机ID版）</title>
 <style>
   body { font-family: system-ui, sans-serif; padding: 2em; max-width: 600px; margin: auto; }
   h1 { text-align: center; }
@@ -30,7 +30,7 @@
 </style>
 </head>
 <body>
-<h1>🔐 OTT 签名链接生成器</h1>
+<h1>🔐 OTT 签名短链生成器</h1>
 
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
@@ -38,18 +38,23 @@
 <label>过期日期时间 (本地时间)</label>
 <input id="exp" type="datetime-local">
 
-<button id="generateBtn" onclick="generate()">生成签名链接</button>
+<button id="generateBtn" onclick="generate()">生成签名短链接</button>
 
 <h3>✅ 生成结果</h3>
 <pre id="output">(结果将显示在这里)</pre>
 <button id="copyBtn" onclick="copyLink()">复制短网址</button>
 
 <script>
-// 固定配置（⚠️ 不要公开放在公网上）
+// 固定配置
 const SIGN_SECRET = "mySuperSecretKey";
 const WORKER_DOMAIN = "https://powertech.ott-1f4.workers.dev/";
 const SHORTIO_API_KEY = "pk_1x1NMq5cuSHbYAPJ"; // ⚠️ 你的 Short.io API Key
-const SHORT_DOMAIN = "short.io"; // ⚠️ 替换成你 Short.io 的域名
+const SHORT_DOMAIN = "short.io"; // ⚠️ 替换为你绑定的 Short.io 域名
+const PREFIX = "id"; // 自定义路径前缀
+
+function random4Digits() {
+  return Math.floor(1000 + Math.random() * 9000).toString(); // 1000-9999
+}
 
 async function generate() {
   const uid = document.getElementById("uid").value.trim();
@@ -63,8 +68,10 @@ async function generate() {
 
   document.getElementById("output").textContent = "⏳ 正在生成短网址...";
 
+  const path = `${PREFIX}${random4Digits()}`; // 例如 id4829
+
   try {
-    const shortUrl = await createShortUrl(longUrl);
+    const shortUrl = await createShortUrl(longUrl, path);
     document.getElementById("output").textContent = shortUrl;
     document.getElementById("copyBtn").style.display = "block";
   } catch (err) {
@@ -72,7 +79,7 @@ async function generate() {
   }
 }
 
-async function createShortUrl(originalURL) {
+async function createShortUrl(originalURL, path) {
   const res = await fetch("https://api.short.io/links", {
     method: "POST",
     headers: {
@@ -81,7 +88,8 @@ async function createShortUrl(originalURL) {
     },
     body: JSON.stringify({
       domain: SHORT_DOMAIN,
-      originalURL
+      originalURL,
+      path
     })
   });
 
