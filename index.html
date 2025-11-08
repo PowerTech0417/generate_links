@@ -11,12 +11,27 @@
     max-width: 600px;
     margin: auto;
   }
+  h1 { text-align: center; }
   label { display: block; margin-top: 1em; font-weight: bold; }
   input, button {
-    width: 100%; padding: .5em; margin-top: .3em;
-    border-radius: 6px; border: 1px solid #ccc;
+    width: 100%;
+    padding: .6em;
+    margin-top: .3em;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
   }
-  button { background: #0078ff; color: #fff; cursor: pointer; }
+  #generateBtn {
+    background: #0078ff;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 1.5em;
+    padding: 0.8em;
+    transition: background 0.2s ease;
+  }
+  #generateBtn:hover { background: #005fcc; }
   pre {
     background: #f6f6f6;
     padding: 1em;
@@ -28,7 +43,7 @@
     display: none;
     margin-top: 1em;
     width: auto;
-    padding: 8px 20px;
+    padding: 10px 24px;
     border-radius: 6px;
     background: #4caf50;
     border: none;
@@ -42,7 +57,7 @@
 </style>
 </head>
 <body>
-<h1>🔐 OTT 签名链接生成器</h1>
+<h1>🔐OTT 链接生成器</h1>
 
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
@@ -50,7 +65,7 @@
 <label>过期日期时间 (本地时间)</label>
 <input id="exp" type="datetime-local">
 
-<button onclick="generate()">生成签名链接</button>
+<button id="generateBtn" onclick="generate()">生成签名链接</button>
 
 <h3>✅ 生成结果</h3>
 <pre id="output">(结果将显示在这里)</pre>
