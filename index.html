@@ -6,15 +6,20 @@
 <title>OTT 签名 + 短网址生成器</title>
 <style>
   body {
-    font-family: system-ui, sans-serif;
+    font-family: "Segoe UI", system-ui, sans-serif;
     padding: 2em;
     max-width: 600px;
     margin: auto;
+    background: #f9fafb;
+  }
+  h1 {
+    text-align: center;
+    color: #0078ff;
   }
   label { display: block; margin-top: 1em; font-weight: bold; }
-  input, select, button {
+  input, button {
     width: 100%; padding: .8em; margin-top: .5em;
-    border-radius: 8px; border: 1px solid #ccc;
+    border-radius: 10px; border: 1px solid #ccc;
     font-size: 1em;
   }
   button {
@@ -22,16 +27,50 @@
     color: #fff;
     font-size: 1.1em;
     cursor: pointer;
-    transition: 0.2s;
+    transition: 0.25s;
   }
   button:hover { background: #005ccc; }
   pre {
-    background: #f7f7f7;
+    background: #fff;
     padding: 1em;
-    border-radius: 8px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
     word-break: break-all;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
   }
   .hidden { display: none; }
+
+  /* 快捷时间按钮组 */
+  .exp-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: .7em;
+    margin-top: .5em;
+  }
+  .exp-btn {
+    flex: 1;
+    border: 2px solid #0078ff;
+    background: #e8f2ff;
+    color: #0078ff;
+    border-radius: 10px;
+    padding: .7em 0;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.25s;
+  }
+  .exp-btn:hover {
+    background: #0078ff;
+    color: #fff;
+    transform: scale(1.03);
+  }
+  .exp-btn span {
+    display: block;
+    font-size: 1.8em;
+    margin-bottom: 0.1em;
+  }
+
+  /* 自动复制选项 */
   .checkbox {
     margin-top: 1em;
     display: flex;
@@ -44,26 +83,25 @@
 
 <h1>🔐 OTT 链接签名 + 短网址生成器</h1>
 
-<!-- ✅ 隐藏的 Worker 和密钥 -->
+<!-- ✅ 隐藏配置 -->
 <input id="secret" value="mySuperSecretKey" class="hidden">
 <input id="domain" value="https://powertech.ott-1f4.workers.dev/" class="hidden">
 
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
 
-<label>过期时间选项</label>
-<select id="expPreset" onchange="updateExpField()">
-  <option value="">自定义时间</option>
-  <option value="3m">3 个月</option>
-  <option value="1y">1 年</option>
-  <option value="perm">永久</option>
-</select>
+<label>快速选择过期时间</label>
+<div class="exp-buttons">
+  <button class="exp-btn" onclick="setExpiration('3m')"><span>📆</span>3 个月</button>
+  <button class="exp-btn" onclick="setExpiration('1y')"><span>⏰</span>1 年</button>
+  <button class="exp-btn" onclick="setExpiration('perm')"><span>♾️</span>永久</button>
+</div>
 
-<label>过期日期时间 (本地时间)</label>
+<label>或自定义过期日期时间 (本地时间)</label>
 <input id="exp" type="datetime-local">
 
 <div class="checkbox">
-  <input type="checkbox" id="autoCopy">
+  <input type="checkbox" id="autoCopy" checked>
   <label for="autoCopy">生成后自动复制短网址 ✅</label>
 </div>
 
@@ -91,27 +129,20 @@ async function hmacSHA256(text, secret) {
   return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// 🔹 自动更新过期时间输入框
-function updateExpField() {
-  const select = document.getElementById("expPreset").value;
-  const expField = document.getElementById("exp");
+// 🔹 快捷过期时间按钮
+function setExpiration(type) {
   const now = new Date();
+  if (type === "3m") now.setMonth(now.getMonth() + 3);
+  else if (type === "1y") now.setFullYear(now.getFullYear() + 1);
+  else if (type === "perm") now.setFullYear(now.getFullYear() + 50);
 
-  if (select === "3m") {
-    now.setMonth(now.getMonth() + 3);
-    expField.value = now.toISOString().slice(0,16);
-  } else if (select === "1y") {
-    now.setFullYear(now.getFullYear() + 1);
-    expField.value = now.toISOString().slice(0,16);
-  } else if (select === "perm") {
-    now.setFullYear(now.getFullYear() + 50);
-    expField.value = now.toISOString().slice(0,16);
-  } else {
-    expField.value = "";
-  }
+  document.getElementById("exp").value = now.toISOString().slice(0,16);
+
+  const tips = { "3m":"3个月", "1y":"1年", "perm":"永久" };
+  alert(`✅ 已设置过期时间为：${tips[type]} (${now.toLocaleString()})`);
 }
 
-// 🔹 自动生成签名 + 短网址
+// 🔹 生成签名 + 短网址
 async function generateFull() {
   const uid = document.getElementById("uid").value.trim();
   const secret = document.getElementById("secret").value.trim();
@@ -132,7 +163,7 @@ async function generateFull() {
   document.getElementById("output").textContent = longURL;
   document.getElementById("copyLongBtn").classList.remove("hidden");
 
-  // 调用短网址 API（Worker）
+  // 调用短网址 API
   try {
     const res = await fetch("https://short.links-a15.workers.dev/", {
       method: "POST",
@@ -157,7 +188,7 @@ async function generateFull() {
   }
 }
 
-// 🔹 复制功能
+// 🔹 手动复制功能
 function copyToClipboard(id) {
   const text = document.getElementById(id).textContent.trim();
   if (!text) return alert("无可复制的内容！");
