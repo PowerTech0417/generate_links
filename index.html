@@ -97,13 +97,16 @@
     from { opacity: 0; transform: translate(-50%, -60%) scale(0.8); }
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
+
+  /* 隐藏元素 */
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
 <h1>🔐 OTT 链接签名 + 短网址生成器</h1>
 
-<!-- ✅ 隐藏密钥 -->
+<!-- ✅ 隐藏密钥与域名 -->
 <input id="secret" value="mySuperSecretKey" class="hidden">
 <input id="domain" value="https://powertech.ott-1f4.workers.dev/" class="hidden">
 
@@ -115,7 +118,7 @@
 
 <!-- 快捷时间按钮 -->
 <div class="time-btns">
-  <button type="button" onclick="setExpiryMonths(1)">🗓️1个月</button>
+  <button type="button" onclick="setExpiryMonths(1)">🗓️ 1个月</button>
   <button type="button" onclick="setExpiryMonths(12)">📆 1年</button>
   <button type="button" onclick="setExpiryMonths(1200)">♾️ 永久</button>
 </div>
@@ -127,6 +130,7 @@
 
 <h3>🔗 短网址</h3>
 <pre id="shortOutput">(生成中...)</pre>
+<button id="copyShortBtn" class="hidden" onclick="copyShortURL()">📋 复制短网址</button>
 
 <div id="popup" class="popup">✅ 已自动复制短网址！</div>
 
@@ -182,6 +186,7 @@ async function generateFull() {
 
     if (data.shortURL) {
       document.getElementById("shortOutput").textContent = data.shortURL;
+      document.getElementById("copyShortBtn").classList.remove("hidden");
       copyAndShowPopup(data.shortURL);
     } else {
       document.getElementById("shortOutput").textContent =
@@ -196,12 +201,30 @@ async function generateFull() {
 // === 自动复制 + 炫酷弹窗 ===
 function copyAndShowPopup(text) {
   navigator.clipboard.writeText(text).then(() => {
-    const popup = document.getElementById("popup");
-    popup.style.display = "block";
-    setTimeout(() => { popup.style.display = "none"; }, 2000);
-  }).catch(err => {
-    alert("❌ 自动复制失败，请手动复制。\n" + err);
+    showPopup("✅ 已自动复制短网址！");
+  }).catch(() => {
+    showPopup("❌ 自动复制失败，请手动点击复制。");
   });
+}
+
+// === 手动复制按钮功能 ===
+function copyShortURL() {
+  const shortURL = document.getElementById("shortOutput").textContent.trim();
+  if (!shortURL.startsWith("http")) {
+    showPopup("❌ 无法复制，短网址无效！");
+    return;
+  }
+  navigator.clipboard.writeText(shortURL).then(() => {
+    showPopup("✅ 已复制短网址！");
+  });
+}
+
+// === 显示炫酷弹窗 ===
+function showPopup(msg) {
+  const popup = document.getElementById("popup");
+  popup.textContent = msg;
+  popup.style.display = "block";
+  setTimeout(() => { popup.style.display = "none"; }, 2000);
 }
 </script>
 </body>
