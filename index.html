@@ -37,7 +37,6 @@
     color: #fff;
   }
 
-  /* ✅ 炫酷红色按钮 */
   .generate-btn {
     background: linear-gradient(90deg, #ff004c, #ff7700);
     color: #fff;
@@ -80,42 +79,6 @@
     transform: scale(1.05);
   }
 
-  #popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
-    min-width: 260px;
-    max-width: 90%;
-    background: linear-gradient(135deg, #0078ff, #00d4ff);
-    color: white;
-    padding: 18px 24px;
-    border-radius: 12px;
-    box-shadow: 0 0 35px #00bfff;
-    font-size: 1.05em;
-    text-align: center;
-    display: none;
-    z-index: 9999;
-    animation: popupGlow 0.28s ease-out forwards;
-  }
-  #popup .title { font-weight: 700; margin-bottom: 6px; }
-  #popup .desc { font-size: 0.95em; opacity: 0.95; margin-bottom: 10px; }
-  #popup .okbtn {
-    margin-top: 6px;
-    background: rgba(255,255,255,0.12);
-    padding: 8px 18px;
-    border-radius: 9px;
-    border: 0;
-    color: #fff;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  @keyframes popupGlow {
-    from { opacity: 0; transform: translate(-50%, -60%) scale(0.86); }
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  }
-
-  /* ✅ 底部版权发光效果 */
   footer {
     text-align: center;
     margin-top: 2.5em;
@@ -151,7 +114,6 @@
   <button type="button" onclick="setExpiryMonths(1200)">♾️ 永久</button>
 </div>
 
-<!-- 🔥 红色按钮 -->
 <button class="generate-btn" onclick="generateFull()">🚀 生成签名并创建短网址</button>
 
 <h3>📋 签名链接</h3>
@@ -161,33 +123,9 @@
 <pre id="shortOutput">(生成中...)</pre>
 <button id="copyShortBtn" class="hidden" onclick="copyShortURL()">📋 复制短网址</button>
 
-<div id="popup" role="dialog" aria-live="polite">
-  <div class="title" id="popup-title">提示</div>
-  <div class="desc" id="popup-desc"></div>
-  <button class="okbtn" id="popup-ok">确定</button>
-</div>
-
-<!-- ✅ 底部版权区域 -->
 <footer>© 2025 @By PowerTech & Sky Mod</footer>
 
 <script>
-// === 以下 JS 与之前完全相同 ===
-
-// 弹窗控制
-let popupTimer = null;
-function showPopup({ title = '提示', desc = '', autoHide = true, duration = 2000 } = {}) {
-  const popup = document.getElementById('popup');
-  document.getElementById('popup-title').textContent = title;
-  document.getElementById('popup-desc').textContent = desc;
-  popup.style.display = 'block';
-  if (popupTimer) clearTimeout(popupTimer);
-  if (autoHide) popupTimer = setTimeout(() => popup.style.display = 'none', duration);
-}
-document.getElementById('popup-ok').addEventListener('click', () => {
-  document.getElementById('popup').style.display = 'none';
-  if (popupTimer) clearTimeout(popupTimer);
-});
-
 function getMalaysiaNow() {
   const now = new Date();
   return new Date(now.getTime() + 8 * 60 * 60 * 1000);
@@ -216,46 +154,34 @@ async function generateFull() {
     const secret = document.getElementById("secret").value.trim();
     const domain = document.getElementById("domain").value.trim();
     const expStr = document.getElementById("exp").value;
-    if (!uid || !expStr) {
-      showPopup({ title: '错误', desc: '请填写 UID 与过期时间。', autoHide: false });
-      return;
-    }
+    if (!uid || !expStr) return;
+
     const expLocal = new Date(expStr);
     const expMillis = expLocal.getTime() - (new Date().getTimezoneOffset() * 60000);
     const text = `${uid}:${expMillis}`;
     const sig = await hmacSHA256(text, secret);
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
     document.getElementById("output").textContent = longURL;
+
     const res = await fetch("https://short.links-a15.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ longURL })
     });
     const data = await res.json();
+
     if (data.shortURL) {
       document.getElementById("shortOutput").textContent = data.shortURL;
       document.getElementById("copyShortBtn").classList.remove('hidden');
-      try {
-        await navigator.clipboard.writeText(data.shortURL);
-        showPopup({ title: '✅ 已复制', desc: '短网址已复制到剪贴板！' });
-      } catch {
-        showPopup({ title: '⚠️ 复制失败', desc: '请手动点击按钮复制。', autoHide: false });
-      }
-    } else {
-      showPopup({ title: '❌ 短链生成失败', desc: data.error || '未知错误', autoHide: false });
+      try { await navigator.clipboard.writeText(data.shortURL); } catch {}
     }
   } catch (err) {
-    showPopup({ title: '错误', desc: err.message, autoHide: false });
+    console.error("Error:", err);
   }
 }
 
 async function copyShortURL() {
   const text = document.getElementById("shortOutput").textContent.trim();
-  try {
-    await navigator.clipboard.writeText(text);
-    showPopup({ title: '✅ 已复制', desc: '短网址已复制到剪贴板！' });
-  } catch {
-    showPopup({ title: '⚠️ 复制失败', desc: '请手动复制短网址。', autoHide: false });
-  }
+  try { await navigator.clipboard.writeText(text); } catch {}
 }
 </script>
 </body>
