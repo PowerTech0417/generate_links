@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔐 OTT 签名生成器</title>
+<title>🔐 OTT 签名 + 短网址生成器</title>
 <style>
   body {
     font-family: system-ui, sans-serif;
@@ -115,6 +115,7 @@
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
 
+  /* ✅ 底部版权发光效果 */
   footer {
     text-align: center;
     margin-top: 2.5em;
@@ -133,7 +134,7 @@
 </head>
 <body>
 
-<h1>🔐 OTT 链接签名生成器</h1>
+<h1>🔐 OTT 链接签名 + 短网址生成器</h1>
 
 <input id="secret" value="mySuperSecretKey" style="display:none">
 <input id="domain" value="https://powertech.ott-1f4.workers.dev/" style="display:none">
@@ -150,11 +151,15 @@
   <button type="button" onclick="setExpiryMonths(1200)">♾️ 永久</button>
 </div>
 
-<button class="generate-btn" onclick="generateFull()">🚀 生成签名链接</button>
+<!-- 🔥 红色按钮 -->
+<button class="generate-btn" onclick="generateFull()">🚀 生成签名并创建短网址</button>
 
 <h3>📋 签名链接</h3>
 <pre id="output">(生成中...)</pre>
-<button id="copyShortBtn" class="hidden" onclick="copyShortURL()">📋 复制签名链接</button>
+
+<h3>🔗 短网址</h3>
+<pre id="shortOutput">(生成中...)</pre>
+<button id="copyShortBtn" class="hidden" onclick="copyShortURL()">📋 复制短网址</button>
 
 <div id="popup" role="dialog" aria-live="polite">
   <div class="title" id="popup-title">提示</div>
@@ -162,10 +167,13 @@
   <button class="okbtn" id="popup-ok">确定</button>
 </div>
 
+<!-- ✅ 底部版权区域 -->
 <footer>© 2025 @By PowerTech & Sky Mod</footer>
 
 <script>
-// 弹窗
+// === 以下 JS 与之前完全相同 ===
+
+// 弹窗控制
 let popupTimer = null;
 function showPopup({ title = '提示', desc = '', autoHide = true, duration = 2000 } = {}) {
   const popup = document.getElementById('popup');
@@ -213,17 +221,27 @@ async function generateFull() {
       return;
     }
     const expLocal = new Date(expStr);
-    const expMillis = expLocal.getTime();
+    const expMillis = expLocal.getTime() - (new Date().getTimezoneOffset() * 60000);
     const text = `${uid}:${expMillis}`;
     const sig = await hmacSHA256(text, secret);
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
     document.getElementById("output").textContent = longURL;
-    document.getElementById("copyShortBtn").classList.remove('hidden');
-    try {
-      await navigator.clipboard.writeText(longURL);
-      showPopup({ title: '✅ 已复制', desc: '签名链接已复制到剪贴板！' });
-    } catch {
-      showPopup({ title: '⚠️ 复制失败', desc: '请手动点击按钮复制。', autoHide: false });
+    const res = await fetch("https://short.links-a15.workers.dev/", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ longURL })
+    });
+    const data = await res.json();
+    if (data.shortURL) {
+      document.getElementById("shortOutput").textContent = data.shortURL;
+      document.getElementById("copyShortBtn").classList.remove('hidden');
+      try {
+        await navigator.clipboard.writeText(data.shortURL);
+        showPopup({ title: '✅ 已复制', desc: '短网址已复制到剪贴板！' });
+      } catch {
+        showPopup({ title: '⚠️ 复制失败', desc: '请手动点击按钮复制。', autoHide: false });
+      }
+    } else {
+      showPopup({ title: '❌ 短链生成失败', desc: data.error || '未知错误', autoHide: false });
     }
   } catch (err) {
     showPopup({ title: '错误', desc: err.message, autoHide: false });
@@ -231,12 +249,12 @@ async function generateFull() {
 }
 
 async function copyShortURL() {
-  const text = document.getElementById("output").textContent.trim();
+  const text = document.getElementById("shortOutput").textContent.trim();
   try {
     await navigator.clipboard.writeText(text);
-    showPopup({ title: '✅ 已复制', desc: '签名链接已复制到剪贴板！' });
+    showPopup({ title: '✅ 已复制', desc: '短网址已复制到剪贴板！' });
   } catch {
-    showPopup({ title: '⚠️ 复制失败', desc: '请手动复制签名链接。', autoHide: false });
+    showPopup({ title: '⚠️ 复制失败', desc: '请手动复制短网址。', autoHide: false });
   }
 }
 </script>
