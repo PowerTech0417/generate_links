@@ -12,7 +12,7 @@
     margin: auto;
   }
   label { display: block; margin-top: 1em; font-weight: bold; }
-  input, button {
+  input, select, button {
     width: 100%; padding: .8em; margin-top: .5em;
     border-radius: 8px; border: 1px solid #ccc;
     font-size: 1em;
@@ -32,6 +32,12 @@
     word-break: break-all;
   }
   .hidden { display: none; }
+  .checkbox {
+    margin-top: 1em;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+  }
 </style>
 </head>
 <body>
@@ -45,8 +51,21 @@
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
 
+<label>过期时间选项</label>
+<select id="expPreset" onchange="updateExpField()">
+  <option value="">自定义时间</option>
+  <option value="3m">3 个月</option>
+  <option value="1y">1 年</option>
+  <option value="perm">永久</option>
+</select>
+
 <label>过期日期时间 (本地时间)</label>
 <input id="exp" type="datetime-local">
+
+<div class="checkbox">
+  <input type="checkbox" id="autoCopy">
+  <label for="autoCopy">生成后自动复制短网址 ✅</label>
+</div>
 
 <button onclick="generateFull()">🚀 生成签名并创建短网址</button>
 
@@ -72,12 +91,33 @@ async function hmacSHA256(text, secret) {
   return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+// 🔹 自动更新过期时间输入框
+function updateExpField() {
+  const select = document.getElementById("expPreset").value;
+  const expField = document.getElementById("exp");
+  const now = new Date();
+
+  if (select === "3m") {
+    now.setMonth(now.getMonth() + 3);
+    expField.value = now.toISOString().slice(0,16);
+  } else if (select === "1y") {
+    now.setFullYear(now.getFullYear() + 1);
+    expField.value = now.toISOString().slice(0,16);
+  } else if (select === "perm") {
+    now.setFullYear(now.getFullYear() + 50);
+    expField.value = now.toISOString().slice(0,16);
+  } else {
+    expField.value = "";
+  }
+}
+
 // 🔹 自动生成签名 + 短网址
 async function generateFull() {
   const uid = document.getElementById("uid").value.trim();
   const secret = document.getElementById("secret").value.trim();
   const domain = document.getElementById("domain").value.trim();
   const expStr = document.getElementById("exp").value;
+  const autoCopy = document.getElementById("autoCopy").checked;
 
   if (!uid || !expStr) {
     alert("请填写 UID 和过期时间！");
@@ -92,7 +132,7 @@ async function generateFull() {
   document.getElementById("output").textContent = longURL;
   document.getElementById("copyLongBtn").classList.remove("hidden");
 
-  // 调用 Cloudflare Worker 创建短网址
+  // 调用短网址 API（Worker）
   try {
     const res = await fetch("https://short.links-a15.workers.dev/", {
       method: "POST",
@@ -104,6 +144,11 @@ async function generateFull() {
     if (data.shortURL) {
       document.getElementById("shortOutput").textContent = data.shortURL;
       document.getElementById("copyShortBtn").classList.remove("hidden");
+
+      if (autoCopy) {
+        await navigator.clipboard.writeText(data.shortURL);
+        alert("✅ 短网址已自动复制到剪贴板！");
+      }
     } else {
       document.getElementById("shortOutput").textContent = "❌ 短网址生成失败：" + (data.error || "未知错误");
     }
@@ -116,11 +161,9 @@ async function generateFull() {
 function copyToClipboard(id) {
   const text = document.getElementById(id).textContent.trim();
   if (!text) return alert("无可复制的内容！");
-  navigator.clipboard.writeText(text).then(() => {
-    alert("✅ 已复制到剪贴板！");
-  }).catch(err => {
-    alert("❌ 复制失败：" + err);
-  });
+  navigator.clipboard.writeText(text)
+    .then(() => alert("✅ 已复制到剪贴板！"))
+    .catch(err => alert("❌ 复制失败：" + err));
 }
 </script>
 </body>
