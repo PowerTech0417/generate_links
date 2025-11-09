@@ -57,9 +57,7 @@
     border: 1px solid #0078ff;
     margin-top: 0.5em;
   }
-  .hidden { display: none; }
 
-  /* 时间快捷按钮 */
   .time-btns {
     display: flex;
     justify-content: space-between;
@@ -78,24 +76,25 @@
     transform: scale(1.05);
   }
 
-  /* 弹窗 */
+  /* 弹窗样式 */
   .popup {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(0.9);
     background: linear-gradient(135deg, #0078ff, #00d4ff);
     color: white;
     padding: 20px 40px;
-    border-radius: 12px;
-    box-shadow: 0 0 25px #00bfff;
+    border-radius: 15px;
+    box-shadow: 0 0 35px #00bfff;
     font-size: 1.2em;
     text-align: center;
     display: none;
-    animation: glow 1s ease-out;
+    z-index: 999;
+    animation: popupGlow 0.3s ease-out forwards;
   }
-  @keyframes glow {
-    from { opacity: 0; transform: translate(-50%, -60%) scale(0.9); }
+  @keyframes popupGlow {
+    from { opacity: 0; transform: translate(-50%, -60%) scale(0.8); }
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
 </style>
@@ -104,7 +103,7 @@
 
 <h1>🔐 OTT 链接签名 + 短网址生成器</h1>
 
-<!-- ✅ 隐藏的 Worker 和密钥 -->
+<!-- ✅ 隐藏密钥 -->
 <input id="secret" value="mySuperSecretKey" class="hidden">
 <input id="domain" value="https://powertech.ott-1f4.workers.dev/" class="hidden">
 
@@ -114,9 +113,9 @@
 <label>过期日期时间（马来西亚时间）</label>
 <input id="exp" type="datetime-local">
 
-<!-- 快捷时间选择按钮 -->
+<!-- 快捷时间按钮 -->
 <div class="time-btns">
-  <button type="button" onclick="setExpiryMonths(1)">🗓️ 1个月</button>
+  <button type="button" onclick="setExpiryMonths(1)">🗓️1个月</button>
   <button type="button" onclick="setExpiryMonths(12)">📆 1年</button>
   <button type="button" onclick="setExpiryMonths(1200)">♾️ 永久</button>
 </div>
@@ -132,17 +131,16 @@
 <div id="popup" class="popup">✅ 已自动复制短网址！</div>
 
 <script>
-// === 时间按钮逻辑（以马来西亚时间计算） ===
+// === 设置马来西亚时间 ===
 function setExpiryMonths(months) {
   const expInput = document.getElementById("exp");
   const now = new Date();
-  // 设置时区偏移（马来西亚时间 +8）
   const malaysiaNow = new Date(now.getTime() + 8 * 60 * 60 * 1000);
   malaysiaNow.setMonth(malaysiaNow.getMonth() + months);
   expInput.value = malaysiaNow.toISOString().slice(0, 16);
 }
 
-// === HMAC 计算 ===
+// === HMAC 签名 ===
 async function hmacSHA256(text, secret) {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -174,7 +172,6 @@ async function generateFull() {
 
   document.getElementById("output").textContent = longURL;
 
-  // 调用短网址 API
   try {
     const res = await fetch("https://short.links-a15.workers.dev/", {
       method: "POST",
@@ -185,7 +182,7 @@ async function generateFull() {
 
     if (data.shortURL) {
       document.getElementById("shortOutput").textContent = data.shortURL;
-      copyText(data.shortURL);
+      copyAndShowPopup(data.shortURL);
     } else {
       document.getElementById("shortOutput").textContent =
         "❌ 短网址生成失败：" + (data.error || "未知错误");
@@ -197,11 +194,13 @@ async function generateFull() {
 }
 
 // === 自动复制 + 炫酷弹窗 ===
-function copyText(text) {
+function copyAndShowPopup(text) {
   navigator.clipboard.writeText(text).then(() => {
     const popup = document.getElementById("popup");
     popup.style.display = "block";
     setTimeout(() => { popup.style.display = "none"; }, 2000);
+  }).catch(err => {
+    alert("❌ 自动复制失败，请手动复制。\n" + err);
   });
 }
 </script>
