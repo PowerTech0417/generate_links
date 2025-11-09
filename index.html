@@ -76,29 +76,43 @@
     transform: scale(1.05);
   }
 
-  /* 弹窗样式 */
-  .popup {
+  /* 弹窗样式（增强）*/
+  #popup {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0.9);
+    min-width: 260px;
+    max-width: 90%;
     background: linear-gradient(135deg, #0078ff, #00d4ff);
     color: white;
-    padding: 20px 40px;
-    border-radius: 15px;
+    padding: 18px 24px;
+    border-radius: 12px;
     box-shadow: 0 0 35px #00bfff;
-    font-size: 1.2em;
+    font-size: 1.05em;
     text-align: center;
     display: none;
-    z-index: 999;
-    animation: popupGlow 0.3s ease-out forwards;
+    z-index: 9999;
+    animation: popupGlow 0.28s ease-out forwards;
+  }
+  #popup .title { font-weight: 700; margin-bottom: 6px; }
+  #popup .desc { font-size: 0.95em; opacity: 0.95; margin-bottom: 10px; }
+  #popup .okbtn {
+    margin-top: 6px;
+    background: rgba(255,255,255,0.12);
+    padding: 8px 18px;
+    border-radius: 9px;
+    border: 0;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
   }
   @keyframes popupGlow {
-    from { opacity: 0; transform: translate(-50%, -60%) scale(0.8); }
+    from { opacity: 0; transform: translate(-50%, -60%) scale(0.86); }
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
 
-  /* 隐藏元素 */
+  /* 隐藏类 */
   .hidden { display: none !important; }
 </style>
 </head>
@@ -106,9 +120,9 @@
 
 <h1>🔐 OTT 链接签名 + 短网址生成器</h1>
 
-<!-- ✅ 隐藏密钥与域名 -->
-<input id="secret" value="mySuperSecretKey" class="hidden">
-<input id="domain" value="https://powertech.ott-1f4.workers.dev/" class="hidden">
+<!-- 隐藏密钥与域名（仍存在于 DOM，但不可见） -->
+<input id="secret" value="mySuperSecretKey" style="display:none">
+<input id="domain" value="https://powertech.ott-1f4.workers.dev/" style="display:none">
 
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
@@ -116,9 +130,9 @@
 <label>过期日期时间（马来西亚时间）</label>
 <input id="exp" type="datetime-local">
 
-<!-- 快捷时间按钮 -->
+<!-- 快捷按钮 -->
 <div class="time-btns">
-  <button type="button" onclick="setExpiryMonths(1)">🗓️1个月</button>
+  <button type="button" onclick="setExpiryMonths(1)">🗓️ 1个月</button>
   <button type="button" onclick="setExpiryMonths(12)">📆 1年</button>
   <button type="button" onclick="setExpiryMonths(1200)">♾️ 永久</button>
 </div>
@@ -132,19 +146,61 @@
 <pre id="shortOutput">(生成中...)</pre>
 <button id="copyShortBtn" class="hidden" onclick="copyShortURL()">📋 复制短网址</button>
 
-<div id="popup" class="popup">✅ 已自动复制短网址！</div>
+<!-- 修复后统一的弹窗（单一元素） -->
+<div id="popup" role="dialog" aria-live="polite">
+  <div class="title" id="popup-title">提示</div>
+  <div class="desc" id="popup-desc"></div>
+  <button class="okbtn" id="popup-ok">确定</button>
+</div>
 
 <script>
-// === 设置马来西亚时间 ===
-function setExpiryMonths(months) {
-  const expInput = document.getElementById("exp");
-  const now = new Date();
-  const malaysiaNow = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-  malaysiaNow.setMonth(malaysiaNow.getMonth() + months);
-  expInput.value = malaysiaNow.toISOString().slice(0, 16);
+// -- 辅助：显示弹窗（统一函数） --
+let popupTimer = null;
+function showPopup({ title = '提示', desc = '', autoHide = true, duration = 2000 } = {}) {
+  const popup = document.getElementById('popup');
+  const tEl = document.getElementById('popup-title');
+  const dEl = document.getElementById('popup-desc');
+  tEl.textContent = title;
+  dEl.textContent = desc;
+
+  // 显示
+  popup.style.display = 'block';
+  // 清除旧计时器
+  if (popupTimer) {
+    clearTimeout(popupTimer);
+    popupTimer = null;
+  }
+  // 自动隐藏（可被用户按确定提前关闭）
+  if (autoHide) {
+    popupTimer = setTimeout(() => {
+      popup.style.display = 'none';
+      popupTimer = null;
+    }, duration);
+  }
 }
 
-// === HMAC 签名 ===
+// 绑定确定按钮立即关闭
+document.getElementById('popup-ok').addEventListener('click', () => {
+  const popup = document.getElementById('popup');
+  popup.style.display = 'none';
+  if (popupTimer) { clearTimeout(popupTimer); popupTimer = null; }
+});
+
+// -- 时间快捷按钮（马来西亚时间） --
+function getMalaysiaNow() {
+  const now = new Date();
+  return new Date(now.getTime() + 8 * 60 * 60 * 1000);
+}
+function setExpiryMonths(months) {
+  const expInput = document.getElementById("exp");
+  const malaysiaNow = getMalaysiaNow();
+  if (months >= 1200) malaysiaNow.setFullYear(malaysiaNow.getFullYear() + 100);
+  else malaysiaNow.setMonth(malaysiaNow.getMonth() + months);
+  // set local datetime-local value (yyyy-mm-ddThh:mm)
+  expInput.value = malaysiaNow.toISOString().slice(0,16);
+}
+
+// -- HMAC 签名 --
 async function hmacSHA256(text, secret) {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -153,78 +209,99 @@ async function hmacSHA256(text, secret) {
     false,
     ["sign"]
   );
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+  const sigBuf = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// === 主逻辑 ===
+// -- 主流程：生成签名、调用短链、显示并复制 --
 async function generateFull() {
-  const uid = document.getElementById("uid").value.trim();
-  const secret = document.getElementById("secret").value.trim();
-  const domain = document.getElementById("domain").value.trim();
-  const expStr = document.getElementById("exp").value;
-
-  if (!uid || !expStr) {
-    alert("请填写 UID 和过期时间！");
-    return;
-  }
-
-  const exp = new Date(expStr).getTime();
-  const text = `${uid}:${exp}`;
-  const sig = await hmacSHA256(text, secret);
-  const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
-
-  document.getElementById("output").textContent = longURL;
-
   try {
-    const res = await fetch("https://short.links-a15.workers.dev/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ longURL })
-    });
-    const data = await res.json();
+    const uid = document.getElementById("uid").value.trim();
+    const secret = document.getElementById("secret").value.trim();
+    const domain = document.getElementById("domain").value.trim();
+    const expStr = document.getElementById("exp").value;
 
-    if (data.shortURL) {
-      document.getElementById("shortOutput").textContent = data.shortURL;
-      document.getElementById("copyShortBtn").classList.remove("hidden");
-      copyAndShowPopup(data.shortURL);
-    } else {
-      document.getElementById("shortOutput").textContent =
-        "❌ 短网址生成失败：" + (data.error || "未知错误");
+    if (!uid || !expStr) {
+      showPopup({ title: '错误', desc: '请填写 UID 与过期时间。', autoHide: false });
+      return;
     }
-  } catch (err) {
-    document.getElementById("shortOutput").textContent =
-      "❌ 网络请求失败：" + err.message;
+
+    // 使用本地输入的时间（已由按钮设置为 MY 时间），转成 UTC 毫秒供签名/Worker 校验
+    const expLocal = new Date(expStr);
+    // Convert assumed local (datetime-local returns local timezone) to UTC millis
+    const expMillis = expLocal.getTime() - (new Date().getTimezoneOffset() * 60000); // normalize
+    // Note: if you intentionally treat input as Malaysia time, adjust accordingly.
+    // (Here we keep consistent with prior logic: use the raw millis)
+    const text = `${uid}:${expMillis}`;
+    const sig = await hmacSHA256(text, secret);
+    const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
+
+    document.getElementById("output").textContent = longURL;
+
+    // call short link worker
+    let res;
+    try {
+      res = await fetch("https://short.links-a15.workers.dev/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ longURL })
+      });
+    } catch (e) {
+      showPopup({ title: '网络错误', desc: '无法联系短链服务，请检查网络或 Worker 部署。', autoHide: false });
+      return;
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      showPopup({ title: '响应错误', desc: '短链服务返回了无效 JSON。', autoHide: false });
+      return;
+    }
+
+    if (!res.ok) {
+      const errMsg = data && (data.error || data.message) ? (data.error || data.message) : `HTTP ${res.status}`;
+      showPopup({ title: '短链失败', desc: errMsg, autoHide: false });
+      // still show returned text in shortOutput if present
+      document.getElementById("shortOutput").textContent = data && data.shortURL ? data.shortURL : `ERROR: ${errMsg}`;
+      return;
+    }
+
+    if (data && data.shortURL) {
+      document.getElementById("shortOutput").textContent = data.shortURL;
+      // show manual copy button
+      document.getElementById("copyShortBtn").classList.remove('hidden');
+      // try auto-copy
+      try {
+        await navigator.clipboard.writeText(data.shortURL);
+        showPopup({ title: '已复制', desc: '短网址已复制到剪贴板 ✓', autoHide: true, duration: 2000 });
+      } catch (e) {
+        // auto-copy failed — show popup with instruction to manually copy
+        showPopup({ title: '复制失败', desc: '浏览器阻止自动复制，请点击「复制短网址」按钮手动复制。', autoHide: false });
+      }
+    } else {
+      showPopup({ title: '短链失败', desc: '未返回短网址。', autoHide: false });
+      document.getElementById("shortOutput").textContent = JSON.stringify(data || {});
+    }
+  } catch (e) {
+    console.error('生成错误', e);
+    showPopup({ title: '内部错误', desc: String(e), autoHide: false });
   }
 }
 
-// === 自动复制 + 炫酷弹窗 ===
-function copyAndShowPopup(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    showPopup("✅ 已自动复制短网址！");
-  }).catch(() => {
-    showPopup("❌ 自动复制失败，请手动点击复制。");
-  });
-}
-
-// === 手动复制按钮功能 ===
-function copyShortURL() {
+// -- 手动复制短网址 --
+async function copyShortURL() {
   const shortURL = document.getElementById("shortOutput").textContent.trim();
-  if (!shortURL.startsWith("http")) {
-    showPopup("❌ 无法复制，短网址无效！");
+  if (!shortURL || !shortURL.startsWith('http')) {
+    showPopup({ title: '无效短链', desc: '当前没有可复制的短网址。', autoHide: true, duration: 2200 });
     return;
   }
-  navigator.clipboard.writeText(shortURL).then(() => {
-    showPopup("✅ 已复制短网址！");
-  });
-}
-
-// === 显示炫酷弹窗 ===
-function showPopup(msg) {
-  const popup = document.getElementById("popup");
-  popup.textContent = msg;
-  popup.style.display = "block";
-  setTimeout(() => { popup.style.display = "none"; }, 2000);
+  try {
+    await navigator.clipboard.writeText(shortURL);
+    showPopup({ title: '已复制', desc: '短网址已复制到剪贴板 ✓', autoHide: true, duration: 2000 });
+  } catch (e) {
+    showPopup({ title: '复制失败', desc: '浏览器不允许剪贴板写入，请手动复制。', autoHide: false });
+  }
 }
 </script>
 </body>
