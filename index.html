@@ -3,41 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0078ff">
 <title>OTT 签名 + 短网址生成器</title>
 <style>
+  :root {
+    --blue: #0078ff;
+    --blue-dark: #005ccc;
+    --bg: #f1f5f9;
+    --card-bg: #ffffff;
+  }
+
   body {
-    font-family: "Segoe UI", system-ui, sans-serif;
-    padding: 2em;
-    max-width: 600px;
-    margin: auto;
-    background: #f9fafb;
+    font-family: "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: #111;
   }
-  h1 {
+
+  /* 顶部栏 */
+  header {
+    background: var(--blue);
+    color: #fff;
+    padding: 1.2em;
     text-align: center;
-    color: #0078ff;
+    font-size: 1.3em;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
-  label { display: block; margin-top: 1em; font-weight: bold; }
+
+  /* 卡片 */
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.5em;
+    margin: 1.5em auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    max-width: 600px;
+  }
+
+  label {
+    display: block;
+    margin-top: 1em;
+    font-weight: 600;
+    color: #333;
+  }
+
   input, button {
-    width: 100%; padding: .8em; margin-top: .5em;
-    border-radius: 10px; border: 1px solid #ccc;
+    width: 100%;
+    padding: .8em;
+    margin-top: .5em;
+    border-radius: 10px;
+    border: 1px solid #ccc;
     font-size: 1em;
   }
+
   button {
-    background: #0078ff;
+    background: var(--blue);
     color: #fff;
     font-size: 1.1em;
     cursor: pointer;
     transition: 0.25s;
+    font-weight: 600;
   }
-  button:hover { background: #005ccc; }
+
+  button:hover {
+    background: var(--blue-dark);
+    transform: scale(1.02);
+  }
+
   pre {
-    background: #fff;
+    background: #f9fafb;
     padding: 1em;
     border-radius: 10px;
     border: 1px solid #e5e7eb;
     word-break: break-all;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
   }
+
   .hidden { display: none; }
 
   /* 快捷时间按钮组 */
@@ -47,11 +91,12 @@
     gap: .7em;
     margin-top: .5em;
   }
+
   .exp-btn {
     flex: 1;
-    border: 2px solid #0078ff;
+    border: 2px solid var(--blue);
     background: #e8f2ff;
-    color: #0078ff;
+    color: var(--blue);
     border-radius: 10px;
     padding: .7em 0;
     font-size: 1em;
@@ -59,11 +104,13 @@
     font-weight: 600;
     transition: 0.25s;
   }
+
   .exp-btn:hover {
-    background: #0078ff;
+    background: var(--blue);
     color: #fff;
     transform: scale(1.03);
   }
+
   .exp-btn span {
     display: block;
     font-size: 1.8em;
@@ -77,43 +124,54 @@
     align-items: center;
     gap: .5em;
   }
+
+  footer {
+    text-align: center;
+    font-size: .85em;
+    color: #777;
+    margin-bottom: 2em;
+  }
 </style>
 </head>
 <body>
 
-<h1>🔐 OTT 链接签名 + 短网址生成器</h1>
+<header>🔐 OTT 签名 + 短网址生成器</header>
 
-<!-- ✅ 隐藏配置 -->
-<input id="secret" value="mySuperSecretKey" class="hidden">
-<input id="domain" value="https://powertech.ott-1f4.workers.dev/" class="hidden">
+<div class="card">
+  <!-- ✅ 隐藏配置 -->
+  <input id="secret" value="mySuperSecretKey" class="hidden">
+  <input id="domain" value="https://powertech.ott-1f4.workers.dev/" class="hidden">
 
-<label>用户 UID</label>
-<input id="uid" placeholder="例如 user123">
+  <label>用户 UID</label>
+  <input id="uid" placeholder="例如 user123">
 
-<label>快速选择过期时间</label>
-<div class="exp-buttons">
-  <button class="exp-btn" onclick="setExpiration('3m')"><span>📆</span>3 个月</button>
-  <button class="exp-btn" onclick="setExpiration('1y')"><span>⏰</span>1 年</button>
-  <button class="exp-btn" onclick="setExpiration('perm')"><span>♾️</span>永久</button>
+  <label>快速选择过期时间</label>
+  <div class="exp-buttons">
+    <button class="exp-btn" onclick="setExpiration('3m')"><span>📆</span>3 个月</button>
+    <button class="exp-btn" onclick="setExpiration('1y')"><span>⏰</span>1 年</button>
+    <button class="exp-btn" onclick="setExpiration('perm')"><span>♾️</span>永久</button>
+  </div>
+
+  <label>或自定义过期日期时间 (本地时间)</label>
+  <input id="exp" type="datetime-local">
+
+  <div class="checkbox">
+    <input type="checkbox" id="autoCopy" checked>
+    <label for="autoCopy">生成后自动复制短网址 ✅</label>
+  </div>
+
+  <button onclick="generateFull()">🚀 生成签名并创建短网址</button>
+
+  <h3>📋 签名链接</h3>
+  <pre id="output">(等待生成...)</pre>
+  <button id="copyLongBtn" class="hidden" onclick="copyToClipboard('output')">复制签名链接</button>
+
+  <h3>🔗 短网址</h3>
+  <pre id="shortOutput">(等待生成...)</pre>
+  <button id="copyShortBtn" class="hidden" onclick="copyToClipboard('shortOutput')">复制短网址</button>
 </div>
 
-<label>或自定义过期日期时间 (本地时间)</label>
-<input id="exp" type="datetime-local">
-
-<div class="checkbox">
-  <input type="checkbox" id="autoCopy" checked>
-  <label for="autoCopy">生成后自动复制短网址 ✅</label>
-</div>
-
-<button onclick="generateFull()">🚀 生成签名并创建短网址</button>
-
-<h3>📋 签名链接</h3>
-<pre id="output">(生成中...)</pre>
-<button id="copyLongBtn" class="hidden" onclick="copyToClipboard('output')">复制签名链接</button>
-
-<h3>🔗 短网址</h3>
-<pre id="shortOutput">(生成中...)</pre>
-<button id="copyShortBtn" class="hidden" onclick="copyToClipboard('shortOutput')">复制短网址</button>
+<footer>© 2025 OTT Tools · PowerTech</footer>
 
 <script>
 // 🔹 HMAC 计算函数
@@ -137,9 +195,6 @@ function setExpiration(type) {
   else if (type === "perm") now.setFullYear(now.getFullYear() + 50);
 
   document.getElementById("exp").value = now.toISOString().slice(0,16);
-
-  const tips = { "3m":"3个月", "1y":"1年", "perm":"永久" };
-  alert(`✅ 已设置过期时间为：${tips[type]} (${now.toLocaleString()})`);
 }
 
 // 🔹 生成签名 + 短网址
