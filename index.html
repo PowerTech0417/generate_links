@@ -10,6 +10,15 @@
     padding: 2em;
     max-width: 600px;
     margin: auto;
+    background: #f9fbff;
+  }
+  h1 {
+    text-align: center;
+    background: linear-gradient(90deg,#0078ff,#00c6ff);
+    -webkit-background-clip: text;
+    color: transparent;
+    font-weight: 900;
+    text-shadow: 0 0 12px rgba(0,180,255,0.4);
   }
   label { display: block; margin-top: 1em; font-weight: bold; }
   input, button {
@@ -22,8 +31,8 @@
     color: #fff;
     font-size: 1.1em;
     cursor: pointer;
-    transition: 0.2s;
-    box-shadow: 0 0 8px rgba(0,200,255,0.4);
+    transition: 0.25s;
+    box-shadow: 0 0 12px rgba(0,200,255,0.4);
   }
   button:hover { background: linear-gradient(90deg,#005ccc,#00aaff); }
   pre {
@@ -33,7 +42,28 @@
     word-break: break-all;
   }
   .hidden { display: none; }
-  .time-note { color: #0078ff; font-size: 0.9em; }
+  .time-note { color: #0078ff; font-size: 0.9em; text-align:center; }
+
+  /* 🌈 Toast 提示样式 */
+  #toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg,#0078ff,#00c6ff);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 1em;
+    box-shadow: 0 0 12px rgba(0,180,255,0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-10px);
+  }
 </style>
 </head>
 <body>
@@ -51,9 +81,9 @@
 <label>过期日期时间 (马来西亚时间)</label>
 <input id="exp" type="datetime-local">
 
-<!-- 时间选项按钮 -->
+<!-- 快捷过期时间按钮 -->
 <div style="margin-top: 1em; display: flex; gap: 0.5em;">
-  <button type="button" onclick="setExpiryMonths(1)">1个月</button>
+  <button type="button" onclick="setExpiryMonths(3)">3个月</button>
   <button type="button" onclick="setExpiryMonths(12)">1年</button>
   <button type="button" onclick="setExpiryMonths(1200)">永久</button>
 </div>
@@ -68,25 +98,25 @@
 <pre id="shortOutput">(生成中...)</pre>
 <button id="copyShortBtn" onclick="copyToClipboard('shortOutput')">复制短网址</button>
 
+<!-- 🌈 Toast 提示框 -->
+<div id="toast"></div>
+
 <script>
-// 设置马来西亚时区 (GMT+8)
+// 🕒 获取马来西亚时间
 function getMalaysiaNow() {
   const utcNow = new Date();
   return new Date(utcNow.getTime() + 8 * 60 * 60 * 1000);
 }
 
-// 设置按钮快速选择到期时间
+// 快捷过期时间设置
 function setExpiryMonths(months) {
   const now = getMalaysiaNow();
-  if (months >= 1200) { // 永久 = +100年
-    now.setFullYear(now.getFullYear() + 100);
-  } else {
-    now.setMonth(now.getMonth() + months);
-  }
+  if (months >= 1200) now.setFullYear(now.getFullYear() + 100);
+  else now.setMonth(now.getMonth() + months);
   document.getElementById("exp").value = now.toISOString().slice(0,16);
 }
 
-// 🔹 HMAC 计算函数
+// 🔐 HMAC 签名
 async function hmacSHA256(text, secret) {
   const key = await crypto.subtle.importKey(
     "raw", new TextEncoder().encode(secret),
@@ -97,7 +127,15 @@ async function hmacSHA256(text, secret) {
   return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2,"0")).join("");
 }
 
-// 🔹 自动生成签名 + 短网址
+// 🌈 显示提示
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2500);
+}
+
+// 🚀 生成签名 + 短网址
 async function generateFull() {
   const uid = document.getElementById("uid").value.trim();
   const secret = document.getElementById("secret").value.trim();
@@ -105,14 +143,12 @@ async function generateFull() {
   const expStr = document.getElementById("exp").value;
 
   if (!uid || !expStr) {
-    alert("请填写 UID 和过期时间！");
+    showToast("⚠️ 请填写 UID 和过期时间！");
     return;
   }
 
-  // ✅ 转换为 UTC 时间戳
   const expMY = new Date(expStr);
-  const exp = expMY.getTime() - 8 * 60 * 60 * 1000; // 转成 UTC 毫秒数
-
+  const exp = expMY.getTime() - 8 * 60 * 60 * 1000;
   const text = `${uid}:${exp}`;
   const sig = await hmacSHA256(text, secret);
   const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${exp}&sig=${sig}`;
@@ -120,7 +156,7 @@ async function generateFull() {
   document.getElementById("output").textContent = longURL;
   document.getElementById("copyLongBtn").classList.remove("hidden");
 
-  // 创建短网址
+  // 调用短网址生成接口
   try {
     const res = await fetch("https://short.links-a15.workers.dev/", {
       method: "POST",
@@ -131,23 +167,25 @@ async function generateFull() {
 
     if (data.shortURL) {
       document.getElementById("shortOutput").textContent = data.shortURL;
+      await navigator.clipboard.writeText(data.shortURL);
+      showToast("✅ 短网址已自动复制！");
     } else {
-      document.getElementById("shortOutput").textContent = "❌ 短网址生成失败：" + (data.error || "未知错误");
+      document.getElementById("shortOutput").textContent = "❌ 生成失败：" + (data.error || "未知错误");
+      showToast("❌ 生成短网址失败");
     }
   } catch (err) {
-    document.getElementById("shortOutput").textContent = "❌ 网络请求失败：" + err.message;
+    document.getElementById("shortOutput").textContent = "❌ 网络错误：" + err.message;
+    showToast("⚠️ 网络连接错误");
   }
 }
 
-// 🔹 复制功能
+// 📋 手动复制
 function copyToClipboard(id) {
   const text = document.getElementById(id).textContent.trim();
-  if (!text) return alert("无可复制的内容！");
+  if (!text) return showToast("⚠️ 没有内容可复制！");
   navigator.clipboard.writeText(text).then(() => {
-    alert("✅ 已复制到剪贴板！");
-  }).catch(err => {
-    alert("❌ 复制失败：" + err);
-  });
+    showToast("✅ 已复制到剪贴板！");
+  }).catch(() => showToast("❌ 复制失败"));
 }
 </script>
 </body>
