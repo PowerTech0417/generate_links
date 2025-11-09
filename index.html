@@ -135,4 +135,110 @@
 
 <h1>🔐 OTT 链接签名生成器</h1>
 
-<input
+<input id="secret" value="mySuperSecretKey" style="display:none">
+<input id="domain" value="https://powertech.ott-1f4.workers.dev/" style="display:none">
+
+<label>用户 UID</label>
+<input id="uid" placeholder="例如 user123">
+
+<label>过期日期时间（马来西亚时间）</label>
+<input id="exp" type="datetime-local">
+
+<div class="time-btns">
+  <button type="button" onclick="setExpiryMonths(1)">🗓️1个月</button>
+  <button type="button" onclick="setExpiryMonths(12)">📆 1年</button>
+  <button type="button" onclick="setExpiryMonths(1200)">♾️ 永久</button>
+</div>
+
+<button class="generate-btn" onclick="generateFull()">🚀 生成签名链接</button>
+
+<h3>📋 签名链接</h3>
+<pre id="output">(生成中...)</pre>
+<button id="copyShortBtn" class="hidden" onclick="copyShortURL()">📋 复制签名链接</button>
+
+<div id="popup" role="dialog" aria-live="polite">
+  <div class="title" id="popup-title">提示</div>
+  <div class="desc" id="popup-desc"></div>
+  <button class="okbtn" id="popup-ok">确定</button>
+</div>
+
+<footer>© 2025 @By PowerTech & Sky Mod</footer>
+
+<script>
+// 弹窗
+let popupTimer = null;
+function showPopup({ title = '提示', desc = '', autoHide = true, duration = 2000 } = {}) {
+  const popup = document.getElementById('popup');
+  document.getElementById('popup-title').textContent = title;
+  document.getElementById('popup-desc').textContent = desc;
+  popup.style.display = 'block';
+  if (popupTimer) clearTimeout(popupTimer);
+  if (autoHide) popupTimer = setTimeout(() => popup.style.display = 'none', duration);
+}
+document.getElementById('popup-ok').addEventListener('click', () => {
+  document.getElementById('popup').style.display = 'none';
+  if (popupTimer) clearTimeout(popupTimer);
+});
+
+function getMalaysiaNow() {
+  const now = new Date();
+  return new Date(now.getTime() + 8 * 60 * 60 * 1000);
+}
+function setExpiryMonths(months) {
+  const expInput = document.getElementById("exp");
+  const malaysiaNow = getMalaysiaNow();
+  if (months >= 1200) malaysiaNow.setFullYear(malaysiaNow.getFullYear() + 100);
+  else malaysiaNow.setMonth(malaysiaNow.getMonth() + months);
+  expInput.value = malaysiaNow.toISOString().slice(0,16);
+}
+
+async function hmacSHA256(text, secret) {
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false, ["sign"]
+  );
+  const sigBuf = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function generateFull() {
+  try {
+    const uid = document.getElementById("uid").value.trim();
+    const secret = document.getElementById("secret").value.trim();
+    const domain = document.getElementById("domain").value.trim();
+    const expStr = document.getElementById("exp").value;
+    if (!uid || !expStr) {
+      showPopup({ title: '错误', desc: '请填写 UID 与过期时间。', autoHide: false });
+      return;
+    }
+    const expLocal = new Date(expStr);
+    const expMillis = expLocal.getTime();
+    const text = `${uid}:${expMillis}`;
+    const sig = await hmacSHA256(text, secret);
+    const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
+    document.getElementById("output").textContent = longURL;
+    document.getElementById("copyShortBtn").classList.remove('hidden');
+    try {
+      await navigator.clipboard.writeText(longURL);
+      showPopup({ title: '✅ 已复制', desc: '签名链接已复制到剪贴板！' });
+    } catch {
+      showPopup({ title: '⚠️ 复制失败', desc: '请手动点击按钮复制。', autoHide: false });
+    }
+  } catch (err) {
+    showPopup({ title: '错误', desc: err.message, autoHide: false });
+  }
+}
+
+async function copyShortURL() {
+  const text = document.getElementById("output").textContent.trim();
+  try {
+    await navigator.clipboard.writeText(text);
+    showPopup({ title: '✅ 已复制', desc: '签名链接已复制到剪贴板！' });
+  } catch {
+    showPopup({ title: '⚠️ 复制失败', desc: '请手动复制签名链接。', autoHide: false });
+  }
+}
+</script>
+</body>
+</html>
