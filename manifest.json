@@ -1,20 +1,18 @@
 {
-  "name": "OTT 链接签名 + 短网址生成器",
-  "short_name": "OTT Generator",
-  "start_url": "/generate_links/",
-  "scope": "/generate_links/",
+  "name": "OTT 链接生成器",
+  "short_name": "OTT Links",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#000000",
-  "theme_color": "#0078ff",
-  "description": "PowerTech OTT 链接签名与短网址生成器 PWA 版",
+  "theme_color": "#ff004c",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
