@@ -4,38 +4,51 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
 
-      - name: Setup Node.js
+    steps:
+      - name: 🧰 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧱 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Setup Java
+      - name: ☕ Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: 17
           distribution: temurin
 
-      - name: Install Bubblewrap CLI
+      - name: 📦 Install Bubblewrap
         run: npm install -g @bubblewrap/cli bubblewrap
 
-      - name: Generate APK from PWA
+      - name: 🌐 Verify manifest.json exists
         run: |
-          npx bubblewrap init --manifest=https://powertech0417.github.io/generate_links/manifest.json --skipPwaValidation --noPrompt
+          if [ ! -f "./manifest.json" ]; then
+            echo "❌ manifest.json not found in root. Copying from /generate_links/ ..."
+            cp generate_links/manifest.json . || echo "⚠️ No manifest found in /generate_links/"
+          fi
+
+      - name: 🔍 Show manifest.json
+        run: cat manifest.json || echo "⚠️ manifest missing"
+
+      - name: 🧱 Generate Bubblewrap project
+        run: |
+          npx bubblewrap init --manifest https://powertech0417.github.io/generate_links/manifest.json --directory ./twabuild --skipPwaValidation --skipSigning
+
+      - name: 🔨 Build Android APK
+        run: |
+          cd twabuild
           npx bubblewrap build
 
-      - name: Upload APK to GitHub Releases
-        uses: softprops/action-gh-release@v1
+      - name: 📤 Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          files: build/output/app-release-signed.apk
-          tag_name: pwa-apk-${{ github.run_number }}
-          name: "PWA APK Build #${{ github.run_number }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: ott-link-pwa
+          path: twabuild/app-release-signed.apk
