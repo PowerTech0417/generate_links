@@ -212,29 +212,90 @@ async function generateFull() {
 
 function toggleLang(lang) {
   const shortURL = document.getElementById("shortOutput").textContent.trim();
-  let text = "";
   if (!shortURL || shortURL.includes("(生成中")) {
     alert("请先生成短网址！");
     return;
   }
 
+  let text = "";
   if (lang === "cn") {
     text = `🇨🇳 中文说明：
 
 📲 下载与安装 OTT 应用
-... 
+
+在 Play 商店 (Play Store) 搜索并安装以下其中一个应用：
+
+🔵 OTT TV（电视版本）
+🟢 OTT PLAYER（手机版本）
+
+⚠️ 只需下载其中一个即可！
+
+---
+
+🧭 使用步骤：
+
+1. 打开 OTT Player / TV 应用
+2. 点击右上角 设置 (Settings) 图标
+3. 选择 Provider（供应商）
+4. 点击 Add Provider（添加供应商）
+5. 选择 Playlist（播放列表）
+6. 输入以下 URL 并点击 Apply（应用）
+
+📌 ✅ 1 个链接仅限 1 台设备使用！
 👇👇URL 链接👇👇
 👉 ${shortURL}
 ⚠️ ⛔️ 同一链接多设备使用将会自动封禁！`;
   } else if (lang === "en") {
     text = `🇬🇧 English Instructions:
-...
+
+📲 Download & Install OTT App
+
+Go to Play Store and search for OTT. Download one of the following apps:
+
+🔵 OTT TV (for TV version)
+🟢 OTT PLAYER (for mobile version)
+
+⚠️ Download only ONE of them!
+
+---
+
+🧭 Setup Steps:
+
+1. Open OTT Player / TV app
+2. Tap the Settings icon
+3. Select Provider
+4. Tap Add Provider
+5. Choose Playlist
+6. Enter the URL below and click Apply
+
+📌 ✅ 1 URL for 1 Device Only!
 👇👇 URL Account Link 👇👇
 👉 ${shortURL}
 ⚠️ ⛔️ If used on multiple devices, it will be auto-banned!`;
   } else {
     text = `🇲🇾 Bahasa Melayu:
-...
+
+📲 Muat Turun & Pasang Aplikasi OTT
+
+Buka Play Store, cari “OTT” dan pasang salah satu aplikasi berikut:
+
+🔵 OTT TV (versi TV)
+🟢 OTT PLAYER (versi telefon bimbit)
+
+⚠️ Muat turun salah satu sahaja!
+
+---
+
+🧭 Langkah Penggunaan:
+
+1. Buka aplikasi OTT Player / TV
+2. Tekan ikon Tetapan (Settings)
+3. Pilih Provider (Penyedia)
+4. Tekan Add Provider (Tambah Penyedia)
+5. Pilih Playlist (Senarai Main)
+6. Masukkan URL di bawah dan tekan Apply (Guna)
+
+📌 ✅ 1 URL hanya untuk 1 peranti sahaja!
 👇👇 Pautan Akaun URL 👇👇
 👉 ${shortURL}
 ⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan secara automatik!`;
