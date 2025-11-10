@@ -15,12 +15,28 @@ jobs:
         with:
           node-version: '18'
 
-      - name: 🧱 Install Bubblewrap
+      - name: ☕ Install JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🧱 Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: 🔧 Build PWA to APK (Non-Interactive)
+      - name: 🔧 Initialize Bubblewrap project
         env:
           CI: true
+          BUBBLEWRAP_FEATURES_JDK_INSTALL: false
         run: |
           npx bubblewrap init --manifest=https://powertech0417.github.io/generate_links/manifest.json --skipPwaValidation --nonInteractive
+
+      - name: 🏗️ Build APK
+        run: |
           npx bubblewrap build --nonInteractive
+
+      - name: 📦 Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: PowerTech-OTT-Generator
+          path: ./output/app-release.apk
