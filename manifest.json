@@ -1,0 +1,16 @@
+{
+  "name": "OTT 链接签名生成器",
+  "short_name": "OTT Link",
+  "description": "生成签名链接并创建短网址（支持 1个月 / 1年 / 永久）",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#0078ff",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
