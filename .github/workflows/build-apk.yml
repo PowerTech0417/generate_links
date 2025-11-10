@@ -25,29 +25,37 @@ jobs:
       - name: 🧱 Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: 🧩 Create Bubblewrap config manually
+      - name: 🧩 Create Bubblewrap project manually (skip init)
         run: |
-          mkdir -p ./twa
-          cat > twa/config.json <<'EOF'
+          mkdir -p twa
+          cd twa
+          cat > twa-manifest.json <<'EOF'
+          {
+            "packageId": "com.powertech.generate_links",
+            "name": "OTT 链接生成器",
+            "startUrl": "https://powertech0417.github.io/generate_links/",
+            "display": "standalone",
+            "themeColor": "#000000",
+            "backgroundColor": "#0a1a3a",
+            "iconUrl": "https://powertech0417.github.io/generate_links/icon.png",
+            "generatorApp": "bubblewrap-cli",
+            "fullScopeUrl": "https://powertech0417.github.io/generate_links/"
+          }
+          EOF
+          cat > config.json <<'EOF'
           {
             "manifestUrl": "https://powertech0417.github.io/generate_links/manifest.json",
             "host": "powertech0417.github.io",
-            "startUrl": "/generate_links/",
-            "name": "generate_links",
-            "launcherName": "generate_links",
+            "name": "PowerTech OTT Generator",
+            "launcherName": "OTT Generator",
             "display": "standalone",
             "themeColor": "#000000",
             "backgroundColor": "#0a1a3a",
             "navigationColor": "#000000",
-            "navigationColorDark": "#000000",
-            "navigationDividerColor": "#000000",
-            "navigationDividerColorDark": "#000000",
             "orientation": "portrait",
             "fullScopeUrl": "https://powertech0417.github.io/generate_links/",
-            "generatorApp": "bubblewrap-cli",
             "versionCode": 1,
             "versionName": "1.0",
-            "fallbackType": "customtabs",
             "signingKey": {
               "path": "./android.keystore",
               "alias": "my-key-alias",
@@ -57,10 +65,10 @@ jobs:
           }
           EOF
 
-      - name: 🏗️ Build APK (silent)
+      - name: 🏗️ Build APK
         run: |
           cd twa
-          npx bubblewrap build --nonInteractive
+          npx bubblewrap build --nonInteractive --skipPwaValidation
 
       - name: 📦 Upload APK artifact
         uses: actions/upload-artifact@v4
