@@ -25,16 +25,45 @@ jobs:
       - name: 🧱 Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: 🔧 Initialize Bubblewrap project (no prompt)
+      - name: 🧩 Create Bubblewrap config manually
         run: |
-          yes "n" | npx bubblewrap init --manifest=https://powertech0417.github.io/generate_links/manifest.json --skipPwaValidation --nonInteractive
+          mkdir -p ./twa
+          cat > twa/config.json <<'EOF'
+          {
+            "manifestUrl": "https://powertech0417.github.io/generate_links/manifest.json",
+            "host": "powertech0417.github.io",
+            "startUrl": "/generate_links/",
+            "name": "generate_links",
+            "launcherName": "generate_links",
+            "display": "standalone",
+            "themeColor": "#000000",
+            "backgroundColor": "#0a1a3a",
+            "navigationColor": "#000000",
+            "navigationColorDark": "#000000",
+            "navigationDividerColor": "#000000",
+            "navigationDividerColorDark": "#000000",
+            "orientation": "portrait",
+            "fullScopeUrl": "https://powertech0417.github.io/generate_links/",
+            "generatorApp": "bubblewrap-cli",
+            "versionCode": 1,
+            "versionName": "1.0",
+            "fallbackType": "customtabs",
+            "signingKey": {
+              "path": "./android.keystore",
+              "alias": "my-key-alias",
+              "password": "android",
+              "keystorePassword": "android"
+            }
+          }
+          EOF
 
-      - name: 🏗️ Build APK
+      - name: 🏗️ Build APK (silent)
         run: |
+          cd twa
           npx bubblewrap build --nonInteractive
 
       - name: 📦 Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: PowerTech-OTT-Generator
-          path: ./output/app-release.apk
+          path: twa/output/app-release.apk
