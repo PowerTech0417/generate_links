@@ -25,23 +25,25 @@ jobs:
       - name: 🧱 Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: 🧩 Create Bubblewrap project manually (skip init)
+      - name: 🧩 Create Bubblewrap config (skip init)
         run: |
           mkdir -p twa
           cd twa
+          echo "✅ Creating twa-manifest.json & config.json manually"
           cat > twa-manifest.json <<'EOF'
           {
             "packageId": "com.powertech.generate_links",
-            "name": "OTT 链接生成器",
+            "name": "PowerTech OTT 生成器",
             "startUrl": "https://powertech0417.github.io/generate_links/",
             "display": "standalone",
             "themeColor": "#000000",
             "backgroundColor": "#0a1a3a",
-            "iconUrl": "https://powertech0417.github.io/generate_links/icon.png",
+            "iconUrl": "https://raw.githubusercontent.com/PowerTech0417/generate_links/refs/heads/main/icon-512.png",
             "generatorApp": "bubblewrap-cli",
             "fullScopeUrl": "https://powertech0417.github.io/generate_links/"
           }
           EOF
+
           cat > config.json <<'EOF'
           {
             "manifestUrl": "https://powertech0417.github.io/generate_links/manifest.json",
@@ -55,10 +57,10 @@ jobs:
             "orientation": "portrait",
             "fullScopeUrl": "https://powertech0417.github.io/generate_links/",
             "versionCode": 1,
-            "versionName": "1.0",
+            "versionName": "1.0.0",
             "signingKey": {
               "path": "./android.keystore",
-              "alias": "my-key-alias",
+              "alias": "key",
               "password": "android",
               "keystorePassword": "android"
             }
@@ -68,6 +70,7 @@ jobs:
       - name: 🏗️ Build APK
         run: |
           cd twa
+          echo "✅ Building APK..."
           npx bubblewrap build --nonInteractive --skipPwaValidation
 
       - name: 📦 Upload APK artifact
