@@ -17,8 +17,14 @@ jobs:
         with:
           node-version: 18
 
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: temurin
+
       - name: Install Bubblewrap CLI
-        run: npm install -g @bubblewrap/cli
+        run: npm install -g @bubblewrap/cli bubblewrap
 
       - name: Generate APK from PWA
         run: |
