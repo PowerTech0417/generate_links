@@ -20,5 +20,8 @@ jobs:
 
       - name: 🔧 Build PWA to APK
         run: |
-          npx bubblewrap init --manifest=https://powertech0417.github.io/generate_links/manifest.json --skipPwaValidation
-          npx bubblewrap build
+          npx bubblewrap init \
+            --manifest=https://powertech0417.github.io/generate_links/manifest.json \
+            --skipPwaValidation \
+            --nonInteractive
+          npx bubblewrap build --nonInteractive
