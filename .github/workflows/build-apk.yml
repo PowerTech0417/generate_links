@@ -18,10 +18,9 @@ jobs:
       - name: 🧱 Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: 🔧 Build PWA to APK
+      - name: 🔧 Build PWA to APK (Non-Interactive)
+        env:
+          CI: true
         run: |
-          npx bubblewrap init \
-            --manifest=https://powertech0417.github.io/generate_links/manifest.json \
-            --skipPwaValidation \
-            --nonInteractive
+          npx bubblewrap init --manifest=https://powertech0417.github.io/generate_links/manifest.json --skipPwaValidation --nonInteractive
           npx bubblewrap build --nonInteractive
