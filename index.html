@@ -138,8 +138,8 @@
 
 <button class="generate-btn" onclick="generateFull()">🚀 生成签名并创建短网址</button>
 
-<h3>📋 签名链接</h3>
-<pre id="output">(生成中...)</pre>
+<!-- ✅ 签名链接改为隐藏 -->
+<pre id="output" class="hidden"></pre>
 
 <h3>🔗 短网址</h3>
 <pre id="shortOutput">(生成中...)</pre>
@@ -192,7 +192,7 @@ async function generateFull() {
     const text = `${uid}:${expMillis}`;
     const sig = await hmacSHA256(text, secret);
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
-    document.getElementById("output").textContent = longURL;
+    document.getElementById("output").textContent = longURL; // ✅ 隐藏但仍保留值
 
     const res = await fetch("https://short.links-a15.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
