@@ -1,18 +1,14 @@
 {
   "name": "OTT 链接生成器",
-  "short_name": "OTT Links",
+  "short_name": "OTTLink",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#000000",
-  "theme_color": "#ff004c",
+  "theme_color": "#0078ff",
+  "description": "🔐 OTT 签名 + 短网址生成器",
   "icons": [
     {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
