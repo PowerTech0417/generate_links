@@ -188,9 +188,7 @@ async function generateFull() {
 
     const expLocal = new Date(expStr);
     const expMillis = expLocal.getTime() - (new Date().getTimezoneOffset() * 60000);
-
-    const expReadable = new Date(expMillis).toISOString();
-    const text = `${uid}:${expMillis}:${expReadable}`;
+    const text = `${uid}:${expMillis}`;
     const sig = await hmacSHA256(text, secret);
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
     document.getElementById("output").textContent = longURL;
@@ -211,8 +209,8 @@ async function generateFull() {
   }
 }
 
-function formatMalaysiaTime(date) {
-  return new Date(date.getTime() + 8 * 60 * 60 * 1000).toLocaleString("zh-CN", { hour12: false });
+function formatDateOnly(date) {
+  return date.toISOString().split("T")[0].replace(/-/g, "/");
 }
 
 function toggleLang(lang) {
@@ -222,9 +220,12 @@ function toggleLang(lang) {
     return;
   }
 
-  const nowMY = formatMalaysiaTime(new Date());
   const expStr = document.getElementById("exp").value;
-  const expMY = expStr ? new Date(expStr).toLocaleString("zh-CN", { hour12: false }) : "-";
+  const expDate = new Date(expStr);
+  const nowMY = getMalaysiaNow();
+
+  const buyDateStr = formatDateOnly(nowMY);
+  const expDateStr = formatDateOnly(expDate);
 
   let text = "";
   if (lang === "cn") {
@@ -257,8 +258,8 @@ function toggleLang(lang) {
 
 ⚠️ ⛔️ 同一链接多设备使用将会自动封禁！
 
-🕒 生成日期（MYT）：${nowMY}
-📅 到期日期（MYT）：${expMY}`;
+🛒 购买日期（MYT）：${buyDateStr}
+📅 到期日期（MYT）：${expDateStr}`;
   } else if (lang === "en") {
     text = `🇬🇧 English Instructions:
 
@@ -287,10 +288,11 @@ Download one of the following apps:
 👇👇 URL Account Link 👇👇
 👉 ${shortURL}
 
-⚠️ ⛔️ If used on multiple devices, it will be auto-banned!
+⚠️ ⛔️ If used on multiple devices,
+      it will be auto-banned!
 
-🕒 Generated (MYT): ${nowMY}
-📅 Expiry Date (MYT): ${expMY}`;
+🛒 Purchase Date (MYT): ${buyDateStr}
+📅 Expiry Date (MYT): ${expDateStr}`;
   } else {
     text = `🇲🇾 Bahasa Melayu:
 
@@ -319,10 +321,12 @@ salah satu aplikasi berikut:
 👇👇 Pautan Akaun URL 👇👇
 👉 ${shortURL}
 
-⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan secara automatik!
+⚠️ ⛔️ Jika digunakan pada lebih daripada 
+      satu peranti, akaun akan diharamkan 
+      secara automatik！
 
-🕒 Tarikh Dihasilkan (MYT): ${nowMY}
-📅 Tarikh Luput (MYT): ${expMY}`;
+🛒 Tarikh Pembelian (MYT): ${buyDateStr}
+📅 Tarikh Tamat (MYT): ${expDateStr}`;
   }
 
   const desc = document.getElementById("desc");
