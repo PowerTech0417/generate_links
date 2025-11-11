@@ -194,7 +194,7 @@ async function generateFull() {
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
     document.getElementById("output").textContent = longURL; // ✅ 隐藏但仍保留值
 
-    const res = await fetch("https://short.links-a15.workers.dev/", {
+    const res = await fetch("https://pw.links-a15.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ longURL })
     });
