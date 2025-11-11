@@ -138,7 +138,6 @@
 
 <button class="generate-btn" onclick="generateFull()">🚀 生成签名并创建短网址</button>
 
-<!-- ✅ 签名链接改为隐藏 -->
 <pre id="output" class="hidden"></pre>
 
 <h3>🔗 短网址</h3>
@@ -189,10 +188,12 @@ async function generateFull() {
 
     const expLocal = new Date(expStr);
     const expMillis = expLocal.getTime() - (new Date().getTimezoneOffset() * 60000);
-    const text = `${uid}:${expMillis}`;
+
+    const expReadable = new Date(expMillis).toISOString();
+    const text = `${uid}:${expMillis}:${expReadable}`;
     const sig = await hmacSHA256(text, secret);
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
-    document.getElementById("output").textContent = longURL; // ✅ 隐藏但仍保留值
+    document.getElementById("output").textContent = longURL;
 
     const res = await fetch("https://pw.links-a15.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -210,12 +211,20 @@ async function generateFull() {
   }
 }
 
+function formatMalaysiaTime(date) {
+  return new Date(date.getTime() + 8 * 60 * 60 * 1000).toLocaleString("zh-CN", { hour12: false });
+}
+
 function toggleLang(lang) {
   const shortURL = document.getElementById("shortOutput").textContent.trim();
   if (!shortURL || shortURL.includes("(生成中")) {
     alert("请先生成短网址！");
     return;
   }
+
+  const nowMY = formatMalaysiaTime(new Date());
+  const expStr = document.getElementById("exp").value;
+  const expMY = expStr ? new Date(expStr).toLocaleString("zh-CN", { hour12: false }) : "-";
 
   let text = "";
   if (lang === "cn") {
@@ -246,7 +255,10 @@ function toggleLang(lang) {
 👇👇URL 链接👇👇
 👉 ${shortURL}
 
-⚠️ ⛔️ 同一链接多设备使用将会自动封禁！`;
+⚠️ ⛔️ 同一链接多设备使用将会自动封禁！
+
+🕒 生成日期（MYT）：${nowMY}
+📅 到期日期（MYT）：${expMY}`;
   } else if (lang === "en") {
     text = `🇬🇧 English Instructions:
 
@@ -275,8 +287,10 @@ Download one of the following apps:
 👇👇 URL Account Link 👇👇
 👉 ${shortURL}
 
-⚠️ ⛔️ If used on multiple devices,
-      it will be auto-banned!`;
+⚠️ ⛔️ If used on multiple devices, it will be auto-banned!
+
+🕒 Generated (MYT): ${nowMY}
+📅 Expiry Date (MYT): ${expMY}`;
   } else {
     text = `🇲🇾 Bahasa Melayu:
 
@@ -305,9 +319,10 @@ salah satu aplikasi berikut:
 👇👇 Pautan Akaun URL 👇👇
 👉 ${shortURL}
 
-⚠️ ⛔️ Jika digunakan pada lebih daripada 
-      satu peranti, akaun akan diharamkan 
-      secara automatik!`;
+⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan secara automatik!
+
+🕒 Tarikh Dihasilkan (MYT): ${nowMY}
+📅 Tarikh Luput (MYT): ${expMY}`;
   }
 
   const desc = document.getElementById("desc");
