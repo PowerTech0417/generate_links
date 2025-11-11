@@ -209,8 +209,8 @@ async function generateFull() {
   }
 }
 
-function formatDateOnly(date) {
-  return date.toISOString().split("T")[0].replace(/-/g, "/");
+function formatDateMY(date) {
+  return date.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kuala_Lumpur" });
 }
 
 function toggleLang(lang) {
@@ -220,12 +220,10 @@ function toggleLang(lang) {
     return;
   }
 
-  const expStr = document.getElementById("exp").value;
-  const expDate = new Date(expStr);
-  const nowMY = getMalaysiaNow();
-
-  const buyDateStr = formatDateOnly(nowMY);
-  const expDateStr = formatDateOnly(expDate);
+  const now = getMalaysiaNow();
+  const exp = new Date(document.getElementById("exp").value);
+  const buyDate = formatDateMY(now);
+  const expDate = formatDateMY(exp);
 
   let text = "";
   if (lang === "cn") {
@@ -233,20 +231,22 @@ function toggleLang(lang) {
 
 📲 下载与安装 OTT 应用
 
-在 Play 商店 (Play Store) 
+在 Play 商店 (Play Store)
 搜索并安装以下其中一个应用：
 
 🔵 OTT TV（电视版本）
 🟢 OTT PLAYER（手机版本）
 
 ⚠️ 只需下载其中一个即可！
+📱 高级版APP下载链接：https://bit.ly/tt1733  
+（如需使用更多功能，请下载高级版）  
 
 ---
 
 🧭 使用步骤：
 
 1. 打开 OTT Player / TV 应用
-2. 点击右上角 设置 (Settings) 图标
+2. 点击右上角 设置 (Settings)
 3. 选择 Provider（供应商）
 4. 点击 Add Provider（添加供应商）
 5. 选择 Playlist（播放列表）
@@ -257,21 +257,24 @@ function toggleLang(lang) {
 👉 ${shortURL}
 
 ⚠️ ⛔️ 同一链接多设备使用将会自动封禁！
+🚫 别用其他设备打开 ID 链接，会自动封禁！
 
-🛒 购买日期（MYT）：${buyDateStr}
-📅 到期日期（MYT）：${expDateStr}`;
+🕒 购买日期（MYT）：${buyDate}
+📅 到期日期（MYT）：${expDate}`;
   } else if (lang === "en") {
     text = `🇬🇧 English Instructions:
 
 📲 Download & Install OTT App
 
-Go to Play Store and search for OTT. 
+Go to Play Store and search for OTT.
 Download one of the following apps:
 
-🔵 OTT TV (for TV version)
-🟢 OTT PLAYER (for mobile version)
+🔵 OTT TV (for TV)
+🟢 OTT PLAYER (for mobile)
 
 ⚠️ Download only ONE of them!
+📱 Premium APP download link: https://bit.ly/tt1733  
+(Download the premium version for extra features)  
 
 ---
 
@@ -285,26 +288,28 @@ Download one of the following apps:
 6. Enter the URL below and click Apply
 
 📌 ✅ 1 URL for 1 Device Only!
-👇👇 URL Account Link 👇👇
+👇👇 URL Link 👇👇
 👉 ${shortURL}
 
-⚠️ ⛔️ If used on multiple devices,
-      it will be auto-banned!
+⚠️ ⛔️ If used on multiple devices, it will be auto-banned!
+🚫 Do NOT open the ID link on other devices — it will be auto-banned!
 
-🛒 Purchase Date (MYT): ${buyDateStr}
-📅 Expiry Date (MYT): ${expDateStr}`;
+🕒 Purchase Date (MYT): ${buyDate}
+📅 Expiry Date (MYT): ${expDate}`;
   } else {
     text = `🇲🇾 Bahasa Melayu:
 
 📲 Muat Turun & Pasang Aplikasi OTT
 
-Buka Play Store, cari “OTT” dan pasang 
-salah satu aplikasi berikut:
+Buka Play Store dan cari “OTT”
+Pasang salah satu aplikasi berikut:
 
-🔵 OTT TV (TV version)
-🟢 OTT PLAYER (Android phone)
+🔵 OTT TV (Versi TV)
+🟢 OTT PLAYER (Versi telefon)
 
-⚠️ Muat turun salah satu sahaja!
+⚠️ Muat turun satu sahaja!
+📱 Pautan muat turun APP Premium: https://bit.ly/tt1733  
+(Muat turun versi premium untuk ciri tambahan)  
 
 ---
 
@@ -315,18 +320,17 @@ salah satu aplikasi berikut:
 3. Pilih Provider (Penyedia)
 4. Tekan Add Provider (Tambah Penyedia)
 5. Pilih Playlist (Senarai Main)
-6. Masukkan URL di bawah dan tekan Apply (Guna)
+6. Masukkan URL di bawah dan tekan Apply
 
 📌 ✅ 1 URL hanya untuk 1 peranti sahaja!
 👇👇 Pautan Akaun URL 👇👇
 👉 ${shortURL}
 
-⚠️ ⛔️ Jika digunakan pada lebih daripada 
-      satu peranti, akaun akan diharamkan 
-      secara automatik！
+⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan!
+🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik!
 
-🛒 Tarikh Pembelian (MYT): ${buyDateStr}
-📅 Tarikh Tamat (MYT): ${expDateStr}`;
+🕒 Tarikh Pembelian (MYT): ${buyDate}
+📅 Tarikh Tamat (MYT): ${expDate}`;
   }
 
   const desc = document.getElementById("desc");
@@ -346,4 +350,4 @@ async function copyDescription() {
 }
 </script>
 </body>
-</html>
+  </html>
