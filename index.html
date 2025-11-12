@@ -193,7 +193,7 @@ async function generateFull() {
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
     document.getElementById("output").textContent = longURL;
 
-    const res = await fetch("https://pw.links-a15.workers.dev/", {
+    const res = await fetch("https://short.ott-eaf.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ longURL })
     });
