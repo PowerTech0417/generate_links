@@ -184,15 +184,20 @@ async function generateFull() {
     const secret = document.getElementById("secret").value.trim();
     const domain = document.getElementById("domain").value.trim();
     const expStr = document.getElementById("exp").value;
-    if (!uid || !expStr) return;
+    if (!uid) { alert("请输入用户 UID！"); return; } // 检查UID
+    if (!expStr) { alert("请设置过期时间！"); return; } // 检查过期时间
 
     const expLocal = new Date(expStr);
-    const expMillis = expLocal.getTime() - (new Date().getTimezoneOffset() * 60000);
+    // 这里要注意： expLocal是本地时间，需要调整以确保 expMillis 接近 UTC/服务器时间
+    // 假设 expStr 是马来西亚时间 (MYT, UTC+8)
+    const expMillis = expLocal.getTime(); 
+
     const text = `${uid}:${expMillis}`;
     const sig = await hmacSHA256(text, secret);
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
     document.getElementById("output").textContent = longURL;
 
+    // API Call
     const res = await fetch("https://short.ott-eaf.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ longURL })
@@ -203,32 +208,62 @@ async function generateFull() {
       document.getElementById("shortOutput").textContent = data.shortURL;
       document.getElementById("copyShortBtn").classList.remove('hidden');
       document.getElementById("copyDescBtn").classList.remove('hidden');
+      
+      // 成功生成短网址后，自动触发中文教程显示
+      toggleLang('cn'); 
+    } else {
+      alert("短网址生成失败：" + (data.error || "未知错误"));
     }
   } catch (err) {
     console.error("Error:", err);
+    alert("生成过程中发生错误。");
   }
 }
 
 function formatDateMY(date) {
-  return date.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kuala_Lumpur" });
+  // 使用 'en-GB' 获取 DD/MM/YYYY 格式，并指定马来西亚时区
+  const options = { 
+    year: "numeric", 
+    month: "2-digit", 
+    day: "2-digit", 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: false,
+    timeZone: "Asia/Kuala_Lumpur" 
+  };
+  return date.toLocaleDateString("zh-CN", options) + " " + date.toLocaleTimeString("zh-CN", options);
 }
 
 function toggleLang(lang) {
   const shortURL = document.getElementById("shortOutput").textContent.trim();
+  const uid = document.getElementById("uid").value.trim(); // <-- 获取 UID
+
   if (!shortURL || shortURL.includes("(生成中")) {
     alert("请先生成短网址！");
     return;
   }
+  if (!uid) {
+    alert("请先输入用户 UID！");
+    return;
+  }
 
-  const now = getMalaysiaNow();
+  // 确保 UID 输入框有焦点，并添加提示
+  document.getElementById("uid").focus();
+
+  const now = new Date();
   const exp = new Date(document.getElementById("exp").value);
   const buyDate = formatDateMY(now);
   const expDate = formatDateMY(exp);
+  
+  // UID Display Line
+  const uidLineCN = `🆔 用户: **${uid}**`;
+  const uidLineEN = `🆔 User: **${uid}**`;
+  const uidLineMY = `🆔 Pengguna: **${uid}**`;
 
   let text = "";
   if (lang === "cn") {
     text = `🇨🇳 中文说明：
-
+---
 📲 下载与安装 OTT 应用
 
 在 Play 商店 (Play Store)
@@ -254,16 +289,17 @@ function toggleLang(lang) {
 
 📌 ✅ 1 个链接仅限 1 台设备使用！
 👇👇播放列表 URL 链接👇👇
-👉 ${shortURL}
+👉 **${shortURL}**
 
 ⚠️ ⛔️ 同一链接多设备使用将会自动封禁！
-🚫 别用其他设备打开 ID 链接，会自动封禁！
-
-🕒 购买日期（MYT）：${buyDate}
-📅 到期日期（MYT）：${expDate}`;
-  } else if (lang === "en") {
+🚫 别用其他设备打开 ID 链接，会自动封禁！`;
+${uidLineCN}
+🕒 购买日期：**${buyDate}**
+📅 到期日期：**${expDate}**
+  } 
+  else if (lang === "en") {
     text = `🇬🇧 English Instructions:
-
+---
 📲 Download & Install OTT App
 
 Go to Play Store and search for OTT.
@@ -288,16 +324,17 @@ Download one of the following apps:
 
 📌 ✅ 1 URL for 1 Device Only!
 👇👇 Playlist URL Link 👇👇
-👉 ${shortURL}
+👉 **${shortURL}**
 
 ⚠️ ⛔️ If used on multiple devices, it will be auto-banned!
-🚫 Do NOT open the ID link on other devices — it will be auto-banned!
-
-🕒 Purchase Date (MYT): ${buyDate}
-📅 Expiry Date (MYT): ${expDate}`;
-  } else {
+🚫 Do NOT open the ID link on other devices — it will be auto-banned!`;
+${uidLineEN}
+🕒 Purchase Date: **${buyDate}**
+📅 Expiry Date: **${expDate}**
+  } 
+  else {
     text = `🇲🇾 Bahasa Melayu:
-
+---
 📲 Muat Turun & Pasang Aplikasi OTT
 
 Buka Play Store dan cari “OTT”
@@ -322,13 +359,13 @@ Pasang salah satu aplikasi berikut:
 
 📌 ✅ 1 URL hanya untuk 1 peranti sahaja!
 👇👇 Playlist Pautan Akaun URL 👇👇
-👉 ${shortURL}
+👉 **${shortURL}**
 
 ⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan!
-🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik!
-
-🕒 Tarikh Pembelian (MYT): ${buyDate}
-📅 Tarikh Tamat (MYT): ${expDate}`;
+🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik!`;
+ ${uidLineMY}
+🕒 Tarikh Pembelian: **${buyDate}**
+📅 Tarikh Tamat: **${expDate}**
   }
 
   const desc = document.getElementById("desc");
@@ -338,14 +375,19 @@ Pasang salah satu aplikasi berikut:
 
 async function copyShortURL() {
   const text = document.getElementById("shortOutput").textContent.trim();
-  try { await navigator.clipboard.writeText(text); } catch {}
+  try { await navigator.clipboard.writeText(text); alert("短网址已复制！");} catch (e) { alert("复制失败，请手动复制。");}
 }
 
 async function copyDescription() {
   const text = document.getElementById("desc").textContent.trim();
-  if (!text) return;
-  try { await navigator.clipboard.writeText(text); } catch {}
+  if (!text) { alert("请先生成短网址并选择语言！"); return; }
+  try { await navigator.clipboard.writeText(text); alert("说明文字已复制！");} catch (e) { alert("复制失败，请手动复制。");}
 }
+
+// 页面加载时自动设置 1 年过期时间
+document.addEventListener('DOMContentLoaded', () => {
+    setExpiryMonths(12);
+});
 </script>
 </body>
   </html>
