@@ -210,34 +210,13 @@ async function generateFull() {
 }
 
 function formatDateMY(date) {
-  // 使用 'en-GB' 获取 DD/MM/YYYY 格式，并指定马来西亚时区
-  const options = { 
-    year: "numeric", 
-    month: "2-digit", 
-    day: "2-digit", 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: false,
-    timeZone: "Asia/Kuala_Lumpur" 
-  };
-  // 结合日期和时间，因为仅使用 toLocaleDateString 可能会丢失时间信息
-  const datePart = date.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kuala_Lumpur" });
-  const timePart = date.toLocaleTimeString("zh-CN", { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: "Asia/Kuala_Lumpur" });
-  return `${datePart} ${timePart}`;
+  return date.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kuala_Lumpur" });
 }
 
 function toggleLang(lang) {
   const shortURL = document.getElementById("shortOutput").textContent.trim();
-  const uid = document.getElementById("uid").value.trim(); // <-- 新增：获取 UID
-
   if (!shortURL || shortURL.includes("(生成中")) {
     alert("请先生成短网址！");
-    return;
-  }
-  // 检查 UID 是否为空，如果为空，则给出提示并返回
-  if (!uid) {
-    alert("请输入用户 UID！");
-    document.getElementById("uid").focus();
     return;
   }
 
@@ -246,15 +225,10 @@ function toggleLang(lang) {
   const buyDate = formatDateMY(now);
   const expDate = formatDateMY(exp);
 
-    // UID Display Line
-  const uidLineCN = `🆔 用户: **${uid}**`;
-  const uidLineEN = `🆔 User: **${uid}**`;
-  const uidLineMY = `🆔 Pengguna: **${uid}**`;
-
   let text = "";
   if (lang === "cn") {
     text = `🇨🇳 中文说明：
----
+
 📲 下载与安装 OTT 应用
 
 在 Play 商店 (Play Store)
@@ -280,17 +254,16 @@ function toggleLang(lang) {
 
 📌 ✅ 1 个链接仅限 1 台设备使用！
 👇👇播放列表 URL 链接👇👇
-👉 **${shortURL}**
+👉 ${shortURL}
 
 ⚠️ ⛔️ 同一链接多设备使用将会自动封禁！
-🚫 别用其他设备打开 ID 链接，会自动封禁！`;
-${uidLineCN}
-🕒 购买日期：**${buyDate}**
-📅 到期日期：**${expDate}**
-  } 
-  else if (lang === "en") {
+🚫 别用其他设备打开 ID 链接，会自动封禁！
+
+🕒 购买日期（MYT）：${buyDate}
+📅 到期日期（MYT）：${expDate}`;
+  } else if (lang === "en") {
     text = `🇬🇧 English Instructions:
----
+
 📲 Download & Install OTT App
 
 Go to Play Store and search for OTT.
@@ -315,17 +288,16 @@ Download one of the following apps:
 
 📌 ✅ 1 URL for 1 Device Only!
 👇👇 Playlist URL Link 👇👇
-👉 **${shortURL}**
+👉 ${shortURL}
 
 ⚠️ ⛔️ If used on multiple devices, it will be auto-banned!
-🚫 Do NOT open the ID link on other devices — it will be auto-banned!`;
-${uidLineEN}
-🕒 Purchase Date: **${buyDate}**
-📅 Expiry Date: **${expDate}**
-  } 
-  else {
+🚫 Do NOT open the ID link on other devices — it will be auto-banned!
+
+🕒 Purchase Date (MYT): ${buyDate}
+📅 Expiry Date (MYT): ${expDate}`;
+  } else {
     text = `🇲🇾 Bahasa Melayu:
----
+
 📲 Muat Turun & Pasang Aplikasi OTT
 
 Buka Play Store dan cari “OTT”
@@ -350,15 +322,14 @@ Pasang salah satu aplikasi berikut:
 
 📌 ✅ 1 URL hanya untuk 1 peranti sahaja!
 👇👇 Playlist Pautan Akaun URL 👇👇
-👉 **${shortURL}**
+👉 ${shortURL}
 
 ⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan!
-🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik!`;
- ${uidLineMY}
-🕒 Tarikh Pembelian: **${buyDate}**
-📅 Tarikh Tamat: **${expDate}**
-  }
+🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik!
 
+🕒 Tarikh Pembelian (MYT): ${buyDate}
+📅 Tarikh Tamat (MYT): ${expDate}`;
+  }
 
   const desc = document.getElementById("desc");
   desc.textContent = text;
