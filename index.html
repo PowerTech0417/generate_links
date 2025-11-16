@@ -119,7 +119,7 @@
 </head>
 <body>
 
-<h1>🔐 OTT 生成器</h1>
+<h1>🔐 OTT 链接签名 + 短网址生成器</h1>
 
 <input id="secret" value="mySuperSecretKey" style="display:none">
 <input id="domain" value="https://powertech.ott-1f4.workers.dev/" style="display:none">
@@ -184,20 +184,15 @@ async function generateFull() {
     const secret = document.getElementById("secret").value.trim();
     const domain = document.getElementById("domain").value.trim();
     const expStr = document.getElementById("exp").value;
-    if (!uid) { alert("请输入用户 UID！"); return; } // 检查UID
-    if (!expStr) { alert("请设置过期时间！"); return; } // 检查过期时间
+    if (!uid || !expStr) return;
 
     const expLocal = new Date(expStr);
-    // 这里要注意： expLocal是本地时间，需要调整以确保 expMillis 接近 UTC/服务器时间
-    // 假设 expStr 是马来西亚时间 (MYT, UTC+8)
-    const expMillis = expLocal.getTime(); 
-
+    const expMillis = expLocal.getTime() - (new Date().getTimezoneOffset() * 60000);
     const text = `${uid}:${expMillis}`;
     const sig = await hmacSHA256(text, secret);
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
     document.getElementById("output").textContent = longURL;
 
-    // API Call
     const res = await fetch("https://short.ott-eaf.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ longURL })
@@ -208,15 +203,9 @@ async function generateFull() {
       document.getElementById("shortOutput").textContent = data.shortURL;
       document.getElementById("copyShortBtn").classList.remove('hidden');
       document.getElementById("copyDescBtn").classList.remove('hidden');
-      
-      // 成功生成短网址后，自动触发中文教程显示
-      toggleLang('cn'); 
-    } else {
-      alert("短网址生成失败：" + (data.error || "未知错误"));
     }
   } catch (err) {
     console.error("Error:", err);
-    alert("生成过程中发生错误。");
   }
 }
 
@@ -231,31 +220,33 @@ function formatDateMY(date) {
     hour12: false,
     timeZone: "Asia/Kuala_Lumpur" 
   };
-  return date.toLocaleDateString("zh-CN", options) + " " + date.toLocaleTimeString("zh-CN", options);
+  // 结合日期和时间，因为仅使用 toLocaleDateString 可能会丢失时间信息
+  const datePart = date.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kuala_Lumpur" });
+  const timePart = date.toLocaleTimeString("zh-CN", { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: "Asia/Kuala_Lumpur" });
+  return `${datePart} ${timePart}`;
 }
 
 function toggleLang(lang) {
   const shortURL = document.getElementById("shortOutput").textContent.trim();
-  const uid = document.getElementById("uid").value.trim(); // <-- 获取 UID
+  const uid = document.getElementById("uid").value.trim(); // <-- 新增：获取 UID
 
   if (!shortURL || shortURL.includes("(生成中")) {
     alert("请先生成短网址！");
     return;
   }
+  // 检查 UID 是否为空，如果为空，则给出提示并返回
   if (!uid) {
-    alert("请先输入用户 UID！");
+    alert("请输入用户 UID！");
+    document.getElementById("uid").focus();
     return;
   }
 
-  // 确保 UID 输入框有焦点，并添加提示
-  document.getElementById("uid").focus();
-
-  const now = new Date();
+  const now = getMalaysiaNow();
   const exp = new Date(document.getElementById("exp").value);
   const buyDate = formatDateMY(now);
   const expDate = formatDateMY(exp);
-  
-  // UID Display Line
+
+    // UID Display Line
   const uidLineCN = `🆔 用户: **${uid}**`;
   const uidLineEN = `🆔 User: **${uid}**`;
   const uidLineMY = `🆔 Pengguna: **${uid}**`;
@@ -368,6 +359,7 @@ Pasang salah satu aplikasi berikut:
 📅 Tarikh Tamat: **${expDate}**
   }
 
+
   const desc = document.getElementById("desc");
   desc.textContent = text;
   desc.classList.remove("hidden");
@@ -375,19 +367,14 @@ Pasang salah satu aplikasi berikut:
 
 async function copyShortURL() {
   const text = document.getElementById("shortOutput").textContent.trim();
-  try { await navigator.clipboard.writeText(text); alert("短网址已复制！");} catch (e) { alert("复制失败，请手动复制。");}
+  try { await navigator.clipboard.writeText(text); } catch {}
 }
 
 async function copyDescription() {
   const text = document.getElementById("desc").textContent.trim();
-  if (!text) { alert("请先生成短网址并选择语言！"); return; }
-  try { await navigator.clipboard.writeText(text); alert("说明文字已复制！");} catch (e) { alert("复制失败，请手动复制。");}
+  if (!text) return;
+  try { await navigator.clipboard.writeText(text); } catch {}
 }
-
-// 页面加载时自动设置 1 年过期时间
-document.addEventListener('DOMContentLoaded', () => {
-    setExpiryMonths(12);
-});
 </script>
 </body>
   </html>
