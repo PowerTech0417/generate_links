@@ -153,13 +153,14 @@
 
 <pre id="desc" class="hidden"></pre>
 
-<footer>© 2025 @By PowerTech & Sky Mod</footer>
+<footer>© 2025 @By PowerTech</footer>
 
 <script>
 function getMalaysiaNow() {
   const now = new Date();
   return new Date(now.getTime() + 8 * 60 * 60 * 1000);
 }
+
 function setExpiryMonths(months) {
   const expInput = document.getElementById("exp");
   const malaysiaNow = getMalaysiaNow();
@@ -180,19 +181,32 @@ async function hmacSHA256(text, secret) {
 
 async function generateFull() {
   try {
-    const uid = document.getElementById("uid").value.trim();
+    // 安全读取 uid 与 exp
+    const uidEl = document.getElementById("uid");
+    const uid = uidEl && typeof uidEl.value === 'string' ? uidEl.value.trim() : '';
     const secret = document.getElementById("secret").value.trim();
     const domain = document.getElementById("domain").value.trim();
     const expStr = document.getElementById("exp").value;
-    if (!uid || !expStr) return;
+    if (!uid || !expStr) {
+      alert("请填写 UID 与 到期时间。");
+      return;
+    }
 
+    // 解析到期时间（注意：datetime-local 返回本地时间）
     const expLocal = new Date(expStr);
-    const expMillis = expLocal.getTime() - (new Date().getTimezoneOffset() * 60000);
+    // 如果你想得到 UTC 毫秒，可以用:
+    const expMillis = expLocal.getTime();
+
     const text = `${uid}:${expMillis}`;
     const sig = await hmacSHA256(text, secret);
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
-    document.getElementById("output").textContent = longURL;
 
+    // 显示长链（并确保输出区域可见）
+    const outputEl = document.getElementById("output");
+    outputEl.textContent = longURL;
+    outputEl.classList.remove('hidden');
+
+    // 调用短链服务
     const res = await fetch("https://short.ott-eaf.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ longURL })
@@ -203,9 +217,13 @@ async function generateFull() {
       document.getElementById("shortOutput").textContent = data.shortURL;
       document.getElementById("copyShortBtn").classList.remove('hidden');
       document.getElementById("copyDescBtn").classList.remove('hidden');
+    } else {
+      console.warn("短链服务未返回 shortURL:", data);
+      alert("短链服务未返回短网址，请检查服务。");
     }
   } catch (err) {
     console.error("Error:", err);
+    alert("生成短链时发生错误，请查看控制台。");
   }
 }
 
@@ -215,18 +233,23 @@ function formatDateMY(date) {
 
 function toggleLang(lang) {
   const shortURL = document.getElementById("shortOutput").textContent.trim();
-  const uid = uid;
-  const uid = uidEl && typeof uidEl.value === 'string' ? uidEl.value.trim() : '';
   if (!shortURL || shortURL.includes("(生成中")) {
     alert("请先生成短网址！");
     return;
   }
 
+  // 安全读取 uid（直接把 uid 当成用户名）
+  const uidEl = document.getElementById("uid");
+  const uid = uidEl && typeof uidEl.value === 'string' ? uidEl.value.trim() : '';
+
   const now = getMalaysiaNow();
-  const exp = new Date(document.getElementById("exp").value);
+  const expInputValue = document.getElementById("exp").value;
+  const exp = expInputValue ? new Date(expInputValue) : now;
   const buyDate = formatDateMY(now);
   const expDate = formatDateMY(exp);
-const lastLine = `👤 User Name: ${uid || "(未填写)"}`;
+
+  const lastLine = `👤 User Name: ${uid || "(未填写)"}`;
+
   let text = "";
   if (lang === "cn") {
     text = `🇨🇳 中文说明：
@@ -261,8 +284,10 @@ const lastLine = `👤 User Name: ${uid || "(未填写)"}`;
 ⚠️ ⛔️ 同一链接多设备使用将会自动封禁！
 🚫 别用其他设备打开 ID 链接，会自动封禁！
 
-🕒 购买日期：${buyDate}
-📅 到期日期：${expDate}\n${lastLine}`;
+🕒 购买日期（MYT）：${buyDate}
+📅 到期日期（MYT）：${expDate}
+
+${lastLine}`;
   } else if (lang === "en") {
     text = `🇬🇧 English Instructions:
 
@@ -275,9 +300,9 @@ Download one of the following apps:
 🟢 OTT PLAYER (for mobile)
 
 ⚠️ Download only ONE of them!
-📱 Premium APP download link: 
-   https://bit.ly/tt1733  
-(Download the premium version for extra features) 
+📱 Premium APP download link:
+   https://bit.ly/tt1733
+(Download the premium version for extra features)
 ---
 🧭 Setup Steps:
 
@@ -295,25 +320,27 @@ Download one of the following apps:
 ⚠️ ⛔️ If used on multiple devices, it will be auto-banned!
 🚫 Do NOT open the ID link on other devices — it will be auto-banned!
 
-🕒 Purchase Date: ${buyDate}
-📅 Expiry Date: ${expDate}\n${lastLine}`;
+🕒 Purchase Date (MYT): ${buyDate}
+📅 Expiry Date (MYT): ${expDate}
+
+${lastLine}`;
   } else {
     text = `🇲🇾 Bahasa Melayu:
 
 📲 Muat Turun & Pasang Aplikasi OTT
 
 Buka Play Store dan cari “OTT”
-Pasang salah satu aplikasi berikut:
+Pasang salah satu aplikasi berikut：
 
 🔵 OTT TV (Versi TV)
 🟢 OTT PLAYER (Versi telefon)
 
 ⚠️ Muat turun satu sahaja!
-📱 Pautan muat turun APP Premium: 
-   https://bit.ly/tt1733  
-(Muat turun versi premium untuk ciri tambahan)  
+📱 Pautan muat turun APP Premium:
+   https://bit.ly/tt1733
+(Muat turun versi premium untuk ciri tambahan)
 ---
-🧭 Langkah Penggunaan:
+🧭 Langkah Penggunaan：
 
 1. Buka aplikasi OTT Player / TV
 2. Tekan ikon Tetapan (Settings)
@@ -326,11 +353,13 @@ Pasang salah satu aplikasi berikut:
 👇👇 Playlist Pautan Akaun URL 👇👇
 👉 ${shortURL}
 
-⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan!
-🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik!
+⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan！
+🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik！
 
-🕒 Tarikh Pembelian: ${buyDate}
-📅 Tarikh Tamat: ${expDate}\n${lastLine}`;
+🕒 Tarikh Pembelian (MYT): ${buyDate}
+📅 Tarikh Tamat (MYT): ${expDate}
+
+${lastLine}`;
   }
 
   const desc = document.getElementById("desc");
