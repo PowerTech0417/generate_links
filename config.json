@@ -1,23 +1,13 @@
 {
-  "packageId": "com.powertech.generate_links",
-  "host": "powertech0417.github.io",
-  "name": "PowerTech OTT 生成器",
-  "launcherName": "PowerTech",
-  "display": "standalone",
-  "themeColor": "#0a0f1c",
-  "navigationColor": "#000000",
-  "navigationColorDark": "#000000",
-  "navigationDividerColor": "#000000",
-  "backgroundColor": "#000000",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "fallbackType": "customtabs",
   "enableNotifications": false,
-  "fullScope": true,
-  "startUrl": "/generate_links/",
-  "orientation": "portrait",
-  "fingerprints": [],
-  "features": {
-    "playBilling": false,
-    "locationDelegation": false,
-    "camera": true,
-    "mic": false
-  }
+  "enableSiteSettingsShortcut": false,
+  "enableAddToHomeScreen": false,
+  "webManifestUrl": "https://powertech0417.github.io/generate_links/manifest.json",
+  "startUrl": "https://powertech0417.github.io/generate_links/",
+  "host": "powertech0417.github.io",
+  "packageId": "com.powertech.generate_links",
+  "name": "PowerTech OTT 生成器"
 }
