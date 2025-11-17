@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!DOCTYPE html><html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔐 OTT 签名 + 短网址生成器</title>
+<title>🔐 OTT 链接签名 + 短网址生成器</title>
 <style>
   body {
     font-family: system-ui, sans-serif;
@@ -36,7 +35,6 @@
     background: #0d1b2a;
     color: #fff;
   }
-
   .generate-btn {
     background: linear-gradient(90deg, #ff004c, #ff7700);
     color: #fff;
@@ -51,7 +49,6 @@
     box-shadow: 0 0 25px #ff6600;
     background: linear-gradient(90deg, #ff6600, #ff0033);
   }
-
   pre {
     background: #0d1b2a;
     padding: 1em;
@@ -60,7 +57,6 @@
     border: 1px solid #0078ff;
     margin-top: 0.5em;
   }
-
   .time-btns {
     display: flex;
     justify-content: space-between;
@@ -78,7 +74,6 @@
     background: linear-gradient(90deg, #00b7ff, #0078ff);
     transform: scale(1.05);
   }
-
   footer {
     text-align: center;
     margin-top: 2.5em;
@@ -91,9 +86,7 @@
     from { text-shadow: 0 0 8px #00e0ff, 0 0 16px #00e0ff; }
     to { text-shadow: 0 0 20px #ff004c, 0 0 40px #ff6600; color: #ffddcc; }
   }
-
   .hidden { display: none !important; }
-
   .lang-buttons {
     display: flex;
     justify-content: space-between;
@@ -117,46 +110,26 @@
   }
 </style>
 </head>
-<body>
+<body><h1>🔐 OTT短网址生成器</h1><input id="secret" value="mySuperSecretKey" style="display:none">
+<input id="domain" value="https://powertech.ott-1f4.workers.dev/" style="display:none"><label>用户 UID</label> <input id="uid" placeholder="例如 user123">
 
-<h1>🔐 OTT生成器</h1>
-
-<input id="secret" value="mySuperSecretKey" style="display:none">
-<input id="domain" value="https://powertech.ott-1f4.workers.dev/" style="display:none">
-
-<label>用户 UID</label>
-<input id="uid" placeholder="例如 user123">
-  
-<label>过期日期时间（马来西亚时间）</label>
-<input id="exp" type="datetime-local">
+<label>过期日期时间（马来西亚时间）</label> <input id="exp" type="datetime-local">
 
 <div class="time-btns">
   <button type="button" onclick="setExpiryMonths(1)">🗓️1个月</button>
   <button type="button" onclick="setExpiryMonths(12)">📆 1年</button>
   <button type="button" onclick="setExpiryMonths(1200)">♾️ 永久</button>
-</div>
+</div><button class="generate-btn" onclick="generateFull()">🚀 生成签名并创建短网址</button>
 
-<button class="generate-btn" onclick="generateFull()">🚀 生成签名并创建短网址</button>
-
-<pre id="output" class="hidden"></pre>
-
-<h3>🔗 短网址</h3>
+<pre id="output" class="hidden"></pre><h3>🔗 短网址</h3>
 <pre id="shortOutput">(生成中...)</pre>
 <button id="copyLongBtn" class="hidden" onclick="copyLongURL()">📋 复制长链接</button>
 <button id="copyShortBtn" class="hidden" onclick="copyShortURL()">📋 复制短网址</button>
-<button id="copyDescBtn" class="hidden" onclick="copyDescription()">📄 复制说明文字</button>
-
-<div class="lang-buttons">
+<button id="copyDescBtn" class="hidden" onclick="copyDescription()">📄 复制说明文字</button><div class="lang-buttons">
   <button onclick="toggleLang('cn')">🇨🇳 中文</button>
   <button onclick="toggleLang('en')">🇬🇧 English</button>
   <button onclick="toggleLang('my')">🇲🇾 Melayu</button>
-</div>
-
-<pre id="desc" class="hidden"></pre>
-
-<footer>© 2025 @By PowerTech</footer>
-
-<script>
+</div><pre id="desc" class="hidden"></pre><footer>© 2025 @By PowerTech</footer><script>
 function getMalaysiaNow() {
   const now = new Date();
   return new Date(now.getTime() + 8 * 60 * 60 * 1000);
@@ -231,9 +204,9 @@ function toggleLang(lang) {
   const expDate = formatDateMY(exp);
   const lastLine = `👤 User Name: ${uid || "(未填写)"}`;
 
-    let text = "";
+  let text = "";
   if (lang === "cn") {
-    text = `🇨🇳 中文说明：
+text = `🇨🇳 中文说明：
 
 📲 下载与安装 OTT 应用
 
