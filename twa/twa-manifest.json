@@ -1,0 +1,20 @@
+{
+  "@schema": "https://github.com/GoogleChromeLabs/bubblewrap/blob/main/packages/cli/schema/twa-manifest.schema.json",
+  "packageId": "com.powertech.generate_links",
+  "host": "powertech0417.github.io",
+  "name": "PowerTech OTT 生成器",
+  "launcherName": "PowerTech",
+  "themeColor": "#0a0f1c",
+  "backgroundColor": "#000000",
+  "startUrl": "/generate_links/",
+  "iconUrl": "https://powertech0417.github.io/generate_links/icons/icon-512.png",
+  "navigationBarColor": "#000000",
+  "navigationBarDividerColor": "#000000",
+  "splashScreenFadeOutDuration": 300,
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "display": "standalone",
+  "orientation": "portrait",
+  "shortcuts": [],
+  "fingerprints": []
+}
