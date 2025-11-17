@@ -1,4 +1,4 @@
-name: Build TWA
+name: Build APK
 
 on:
   workflow_dispatch:
@@ -8,81 +8,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # -------------------------
-      # Install Java 17
-      # -------------------------
-      - name: Install Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      # -------------------------
-      # Install Android SDK (Correct & Stable)
-      # -------------------------
-      - name: Install Android SDK
+      - name: Set up Bubblewrap
         run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip wget
+          sudo npm install -g @bubblewrap/cli
 
-          mkdir -p $HOME/android-sdk
-          cd $HOME/android-sdk
-
-          # Download latest commandline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
-
-          # Extract to temporary folder
-          mkdir tmp
-          unzip cmdtools.zip -d tmp
-
-          # Move to the correct final location
-          mkdir -p cmdline-tools/latest
-          mv tmp/cmdline-tools/* cmdline-tools/latest/
-
-          # Accept Android SDK licenses
-          yes | cmdline-tools/latest/bin/sdkmanager --licenses
-
-          # Install components required for Bubblewrap
-          cmdline-tools/latest/bin/sdkmanager \
-            "platform-tools" \
-            "build-tools;34.0.0" \
-            "platforms;android-34"
-
-          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
-
-      # -------------------------
-      # Install Bubblewrap
-      # -------------------------
-      - name: Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
-
-      # -------------------------
-      # Init TWA
-      # (Non-interactive mode)
-      # -------------------------
-      - name: Init TWA (non-interactive)
+      - name: Initialize Bubblewrap with auto-confirmation
         run: |
-          yes "" | bubblewrap init \
-            --manifest=https://powertech0417.github.io/generate_links/manifest.json \
-            --skip-requirements-check \
-            --use-existing
+          printf "yes\nyes\nyes\n" | bubblewrap init
 
-      # -------------------------
-      # Build TWA
-      # -------------------------
-      - name: Build TWA
-        run: bubblewrap build --skip-requirements-check
+      - name: Fix cmdline-tools folder (prevent mv error)
+        run: |
+          ANDROID_SDK_ROOT="$HOME/.bubblewrap/android-sdk"
+          if [ -d "$ANDROID_SDK_ROOT/cmdline-tools/latest/latest" ]; then
+            # move inner 'latest' out and remove double folders
+            mv "$ANDROID_SDK_ROOT/cmdline-tools/latest/latest" "$ANDROID_SDK_ROOT/cmdline-tools/latest_tmp"
+            rm -rf "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+            mv "$ANDROID_SDK_ROOT/cmdline-tools/latest_tmp" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          fi
 
-      # -------------------------
-      # Upload APK
-      # -------------------------
+      - name: Build App Bundle
+        run: |
+          bubblewrap build
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
-          path: app-release-signed.apk
+          name: app-apk
+          path: ./app-release-signed.apk
