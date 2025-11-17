@@ -127,9 +127,6 @@
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
   
-<label>用户昵称 / 名字（将加入教程底部）</label>
-<input id="uname" placeholder="例如 Ken Ong">
-  
 <label>过期日期时间（马来西亚时间）</label>
 <input id="exp" type="datetime-local">
 
@@ -218,6 +215,8 @@ function formatDateMY(date) {
 
 function toggleLang(lang) {
   const shortURL = document.getElementById("shortOutput").textContent.trim();
+  const uid = uid;
+  const uid = uidEl && typeof uidEl.value === 'string' ? uidEl.value.trim() : '';
   if (!shortURL || shortURL.includes("(生成中")) {
     alert("请先生成短网址！");
     return;
@@ -227,7 +226,7 @@ function toggleLang(lang) {
   const exp = new Date(document.getElementById("exp").value);
   const buyDate = formatDateMY(now);
   const expDate = formatDateMY(exp);
-const lastLine = `👤 User Name: ${uname || "(未填写)"}`;
+const lastLine = `👤 User Name: ${uid || "(未填写)"}`;
   let text = "";
   if (lang === "cn") {
     text = `🇨🇳 中文说明：
@@ -262,8 +261,8 @@ const lastLine = `👤 User Name: ${uname || "(未填写)"}`;
 ⚠️ ⛔️ 同一链接多设备使用将会自动封禁！
 🚫 别用其他设备打开 ID 链接，会自动封禁！
 
-🕒 购买日期（MYT）：${buyDate}
-📅 到期日期（MYT）：${expDate}\n${lastLine}`;
+🕒 购买日期：${buyDate}
+📅 到期日期：${expDate}\n${lastLine}`;
   } else if (lang === "en") {
     text = `🇬🇧 English Instructions:
 
@@ -296,8 +295,8 @@ Download one of the following apps:
 ⚠️ ⛔️ If used on multiple devices, it will be auto-banned!
 🚫 Do NOT open the ID link on other devices — it will be auto-banned!
 
-🕒 Purchase Date (MYT): ${buyDate}
-📅 Expiry Date (MYT): ${expDate}\n${lastLine}`;
+🕒 Purchase Date: ${buyDate}
+📅 Expiry Date: ${expDate}\n${lastLine}`;
   } else {
     text = `🇲🇾 Bahasa Melayu:
 
@@ -330,8 +329,8 @@ Pasang salah satu aplikasi berikut:
 ⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan!
 🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik!
 
-🕒 Tarikh Pembelian (MYT): ${buyDate}
-📅 Tarikh Tamat (MYT): ${expDate}\n${lastLine}`;
+🕒 Tarikh Pembelian: ${buyDate}
+📅 Tarikh Tamat: ${expDate}\n${lastLine}`;
   }
 
   const desc = document.getElementById("desc");
