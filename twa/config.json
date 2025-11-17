@@ -1,0 +1,21 @@
+{
+  "packageId": "com.powertech.generate_links",
+  "host": "powertech0417.github.io",
+  "name": "PowerTech OTT 生成器",
+  "launcherName": "PowerTech",
+  "themeColor": "#0a0f1c",
+  "navigationColor": "#000000",
+  "navigationDividerColor": "#000000",
+  "backgroundColor": "#000000",
+  "startUrl": "/generate_links/",
+  "orientation": "portrait",
+  "fullScope": true,
+  "enableNotifications": false,
+  "features": {
+    "playBilling": false,
+    "locationDelegation": false,
+    "camera": true,
+    "mic": false
+  },
+  "fingerprints": []
+}
