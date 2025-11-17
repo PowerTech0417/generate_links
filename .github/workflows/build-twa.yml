@@ -11,25 +11,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Bubblewrap
-        run: |
-          sudo npm install -g @bubblewrap/cli
+      - name: Install Bubblewrap
+        run: sudo npm install -g @bubblewrap/cli
 
-      - name: Initialize Bubblewrap with auto-confirmation
+      - name: Initialize Bubblewrap (non-interactive)
         run: |
-          printf "yes\nyes\nyes\n" | bubblewrap init
+          bubblewrap init --non-interactive --agree-to-android-sdk-license
 
-      - name: Fix cmdline-tools folder (prevent mv error)
+      - name: Fix Android SDK cmdline-tools folder
         run: |
           ANDROID_SDK_ROOT="$HOME/.bubblewrap/android-sdk"
           if [ -d "$ANDROID_SDK_ROOT/cmdline-tools/latest/latest" ]; then
-            # move inner 'latest' out and remove double folders
             mv "$ANDROID_SDK_ROOT/cmdline-tools/latest/latest" "$ANDROID_SDK_ROOT/cmdline-tools/latest_tmp"
             rm -rf "$ANDROID_SDK_ROOT/cmdline-tools/latest"
             mv "$ANDROID_SDK_ROOT/cmdline-tools/latest_tmp" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
           fi
 
-      - name: Build App Bundle
+      - name: Build App
         run: |
           bubblewrap build
 
