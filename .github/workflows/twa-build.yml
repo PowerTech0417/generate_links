@@ -6,6 +6,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      ANDROID_HOME: ${{ github.workspace }}/android-sdk
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -17,54 +22,51 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # Install Android SDK manually (to prevent Bubblewrap prompting)
+      # Install Android SDK (correct method)
       - name: Install Android SDK
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmdtest unzip
+          sudo apt-get install -y unzip
 
-          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip commandlinetools-linux-11076708_latest.zip -d $HOME/android-sdk
+          mkdir -p $ANDROID_HOME/cmdline-tools
 
-          mkdir -p $HOME/android-sdk/cmdline-tools/latest
-          mv $HOME/android-sdk/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmd.zip
+          unzip cmd.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
 
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          echo "PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH" >> $GITHUB_ENV
 
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-33"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33"
 
       # Install Bubblewrap
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
+      # Create TWA folder
       - name: Create TWA folder
         run: mkdir -p twa
 
-      # Initialize Bubblewrap WITHOUT QUESTIONS
-        # NOTE: We skip:
-        #  - JDK check (because we installed it)
-        #  - Android SDK install (because we already installed)
-        #  - Any prompts (through yes "")
+      # Bubblewrap init — FULLY NON-INTERACTIVE
       - name: Initialize TWA (non-interactive)
         working-directory: twa
         run: |
-          ANDROID_HOME=$HOME/android-sdk \
-          yes "" | bubblewrap init \
+          yes "y" | bubblewrap init \
             --manifest=https://powertech0417.github.io/generate_links/manifest.json \
             --skip-requirements-check \
             --use-existing
 
+      # Build TWA APK
       - name: Build TWA
         working-directory: twa
         run: |
-          ANDROID_HOME=$HOME/android-sdk \
           bubblewrap build --skip-requirements-check
 
-      # Upload APK
+      # Upload APK (new v4 syntax)
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: twa-apk
-          path: twa/app-release-signed.apk
+          path: |
+            twa/**/*.apk
+            twa/**/*.aab
