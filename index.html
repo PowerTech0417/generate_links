@@ -110,7 +110,7 @@
   }
 </style>
 </head>
-<body><h1>🔐 OTT短网址生成器</h1><input id="secret" value="mySuperSecretKey" style="display:none">
+<body><h1>🔐 OTT 链接签名 + 短网址生成器</h1><input id="secret" value="mySuperSecretKey" style="display:none">
 <input id="domain" value="https://powertech.ott-1f4.workers.dev/" style="display:none"><label>用户 UID</label> <input id="uid" placeholder="例如 user123">
 
 <label>过期日期时间（马来西亚时间）</label> <input id="exp" type="datetime-local">
@@ -121,7 +121,7 @@
   <button type="button" onclick="setExpiryMonths(1200)">♾️ 永久</button>
 </div><button class="generate-btn" onclick="generateFull()">🚀 生成签名并创建短网址</button>
 
-<pre id="output"></pre><h3>🔗 短网址</h3>
+<pre id="output" class="hidden"></pre><h3>🔗 短网址</h3>
 <pre id="shortOutput">(生成中...)</pre>
 <button id="copyLongBtn" class="hidden" onclick="copyLongURL()">📋 复制长链接</button>
 <button id="copyShortBtn" class="hidden" onclick="copyShortURL()">📋 复制短网址</button>
@@ -176,7 +176,7 @@ async function generateFull() {
     });
     const data = await res.json();
     if (data.shortURL) {
-      document.getElementById("shortOutput").textContent = data.shortURL;
+      document.getElementById("shortOutput").textContent = data.shortURL.replace(/^https?:\/\//, "");
       document.getElementById("copyShortBtn").classList.remove('hidden');
       document.getElementById("copyDescBtn").classList.remove('hidden');
     } else {
@@ -206,128 +206,39 @@ function toggleLang(lang) {
 
   let text = "";
   if (lang === "cn") {
-text = `🇨🇳 中文说明：
-
-📲 下载与安装 OTT 应用
-
-在 Play 商店 (Play Store)
-搜索并安装以下其中一个应用：
-
-🔵 OTT TV（电视版本）
-🟢 OTT PLAYER（手机版本）
-
-⚠️ 只需下载其中一个即可！
-
-📱 高级版APP下载链接：
-   https://bit.ly/tt1733  
-（如需使用更多功能，请下载高级版）  
----
-🧭 使用步骤：
-
-1. 打开 OTT Player / TV 应用
-2. 点击右上角 设置 (Settings)
-3. 选择 Provider（供应商）
-4. 点击 Add Provider（添加供应商）
-5. 选择 Playlist（播放列表）
-6. 输入以下 URL 并点击 Apply（应用）
-
-📌 ✅ 1 个链接仅限 1 台设备使用！
-👇👇播放列表 URL 链接👇👇
-👉 ${shortURL}
-
-⚠️ ⛔️ 同一链接多设备使用将会自动封禁！
-🚫 别用其他设备打开 ID 链接，会自动封禁！
-
-🕒 购买日期（MYT）：${buyDate}
-📅 到期日期（MYT）：${expDate}
-${lastLine}`;
+    text = `🇨🇳 中文说明：\n\n📲 下载与安装 OTT 应用\n\n在 Play 商店 (Play Store)\n搜索并安装以下其中一个应用：\n\n🔵 OTT TV（电视版本）\n🟢 OTT PLAYER（手机版本）\n\n⚠️ 只需下载其中一个即可！\n\n📱 高级版APP下载链接：\n   https://bit.ly/tt1733  \n（如需使用更多功能，请下载高级版）  \n---\n🧭 使用步骤：\n\n1. 打开 OTT Player / TV 应用\n2. 点击右上角 设置 (Settings)\n3. 选择 Provider（供应商）\n4. 点击 Add Provider（添加供应商）\n5. 选择 Playlist（播放列表）\n6. 输入以下 URL 并点击 Apply（应用）\n\n📌 ✅ 1 个链接仅限 1 台设备使用！\n👇👇播放列表 URL 链接👇👇\n👉 ${shortURL}\n\n⚠️ ⛔️ 同一链接多设备使用将会自动封禁！\n🚫 别用其他设备打开 ID 链接，会自动封禁！\n\n🕒 购买日期（MYT）：${buyDate}\n📅 到期日期（MYT）：${expDate}\n${lastLine}`;
   } else if (lang === "en") {
-    text = `🇬🇧 English Instructions:
-
-📲 Download & Install OTT App
-
-Go to Play Store and search for OTT.
-Download one of the following apps:
-
-🔵 OTT TV (for TV)
-🟢 OTT PLAYER (for mobile)
-
-⚠️ Download only ONE of them!
-📱 Premium APP download link:
-   https://bit.ly/tt1733
-(Download the premium version for extra features)
----
-🧭 Setup Steps:
-
-1. Open OTT Player / TV app
-2. Tap the Settings icon
-3. Select Provider
-4. Tap Add Provider
-5. Choose Playlist
-6. Enter the URL below and click Apply
-
-📌 ✅ 1 URL for 1 Device Only!
-👇👇 Playlist URL Link 👇👇
-👉 ${shortURL}
-
-⚠️ ⛔️ If used on multiple devices, it will be auto-banned!
-🚫 Do NOT open the ID link on other devices — it will be auto-banned!
-
-🕒 Purchase Date (MYT): ${buyDate}
-📅 Expiry Date (MYT): ${expDate}
-${lastLine}`;
+    text = `🇬🇧 English Instructions：\n\n📲 Download & Install OTT App\n\nGo to Play Store and search for OTT.\nDownload one of the following apps：\n\n🔵 OTT TV (for TV)\n🟢 OTT PLAYER (for mobile)\n\n⚠️ Download only ONE of them!\n📱 Premium APP download link：\n   https://bit.ly/tt1733\n(Download the premium version for extra features)\n---\n🧭 Setup Steps：\n\n1. Open OTT Player / TV app\n2. Tap the Settings icon\n3. Select Provider\n4. Tap Add Provider\n5. Choose Playlist\n6. Enter the URL below and click Apply\n\n📌 ✅ 1 URL for 1 Device Only!\n👇👇 Playlist URL Link 👇👇\n👉 ${shortURL}\n\n⚠️ ⛔️ If used on multiple devices, it will be auto-banned!\n🚫 Do NOT open the ID link on other devices — it will be auto-banned！\n\n🕒 Purchase Date (MYT)：${buyDate}\n📅 Expiry Date (MYT)：${expDate}\n${lastLine}`;
   } else {
-    text = `🇲🇾 Bahasa Melayu:
-
-📲 Muat Turun & Pasang Aplikasi OTT
-
-Buka Play Store dan cari “OTT”
-Pasang salah satu aplikasi berikut：
-
-🔵 OTT TV (Versi TV)
-🟢 OTT PLAYER (Versi telefon)
-
-⚠️ Muat turun satu sahaja!
-📱 Pautan muat turun APP Premium:
-   https://bit.ly/tt1733
-(Muat turun versi premium untuk ciri tambahan)
----
-🧭 Langkah Penggunaan：
-
-1. Buka aplikasi OTT Player / TV
-2. Tekan ikon Tetapan (Settings)
-3. Pilih Provider (Penyedia)
-4. Tekan Add Provider (Tambah Penyedia)
-5. Pilih Playlist (Senarai Main)
-6. Masukkan URL di bawah dan tekan Apply
-
-📌 ✅ 1 URL hanya untuk 1 peranti sahaja!
-👇👇 Playlist Pautan Akaun URL 👇👇
-👉 ${shortURL}
-
-⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan！
-🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik！
-
-🕒 Tarikh Pembelian (MYT): ${buyDate}
-📅 Tarikh Tamat (MYT): ${expDate}
-${lastLine}`;
+    text = `🇲🇾 Bahasa Melayu：\n\n📲 Muat Turun & Pasang Aplikasi OTT\n\nBuka Play Store dan cari “OTT”\nPasang salah satu aplikasi berikut：\n\n🔵 OTT TV (Versi TV)\n🟢 OTT PLAYER (Versi telefon)\n\n⚠️ Muat turun satu sahaja!\n📱 Pautan muat turun APP Premium：\n   https://bit.ly/tt1733\n(Muat turun versi premium untuk ciri tambahan)\n---\n🧭 Langkah Penggunaan：\n\n1. Buka aplikasi OTT Player / TV\n2. Tekan ikon Tetapan (Settings)\n3. Pilih Provider (Penyedia)\n4. Tekan Add Provider (Tambah Penyedia)\n5. Pilih Playlist (Senarai Main)\n6. Masukkan URL di bawah dan tekan Apply\n\n📌 ✅ 1 URL hanya untuk 1 peranti sahaja!\n👇👇 Playlist Pautan Akaun URL 👇👇\n👉 ${shortURL}\n\n⚠️ ⛔️ Jika digunakan pada lebih daripada satu peranti, akaun akan diharamkan！\n🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik！\n\n🕒 Tarikh Pembelian (MYT)：${buyDate}\n📅 Tarikh Tamat (MYT)：${expDate}\n${lastLine}`;
   }
-
   const desc = document.getElementById("desc");
   desc.textContent = text;
   desc.classList.remove("hidden");
 }
-
+async function copyLongURL() {
+  const text = document.getElementById("output").textContent.trim();
+  if (!text) return;
+  try { await navigator.clipboard.writeText(text); } catch {}
+}
 async function copyShortURL() {
   const text = document.getElementById("shortOutput").textContent.trim();
   try { await navigator.clipboard.writeText(text); } catch {}
 }
-
 async function copyDescription() {
   const text = document.getElementById("desc").textContent.trim();
   if (!text) return;
   try { await navigator.clipboard.writeText(text); } catch {}
 }
-</script>
-</body>
-  </html>
+
+// === 修复 copyLongURL：放在全局、确保可调用 ===
+async function copyLongURL() {
+  const text = document.getElementById("output").textContent.trim();
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {}
+}
+
+</script></body>
+</html>
