@@ -8,24 +8,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
 
-      - name: ☕ Setup JDK 17
+      - name: ☕ Setup JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
-      - name: 🧱 Install Bubblewrap CLI
+      - name: 🧱 Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: 🧩 Create Bubblewrap config (skip init)
+      - name: 🧩 Create config
         run: |
           mkdir -p twa
           cd twa
@@ -38,49 +38,32 @@ jobs:
             "themeColor": "#000000",
             "backgroundColor": "#0a1a3a",
             "iconUrl": "https://raw.githubusercontent.com/PowerTech0417/generate_links/refs/heads/main/icon-512.png",
-            "generatorApp": "bubblewrap-cli",
             "fullScopeUrl": "https://powertech0417.github.io/generate_links/"
           }
           EOF
 
-          cat > config.json <<'EOF'
-          {
-            "manifestUrl": "https://powertech0417.github.io/generate_links/manifest.json",
-            "host": "powertech0417.github.io",
-            "name": "PowerTech OTT Generator",
-            "launcherName": "OTT Generator",
-            "display": "standalone",
-            "themeColor": "#000000",
-            "backgroundColor": "#0a1a3a",
-            "navigationColor": "#000000",
-            "orientation": "portrait",
-            "fullScopeUrl": "https://powertech0417.github.io/generate_links/",
-            "versionCode": 1,
-            "versionName": "1.0.0",
-            "signingKey": {
-              "path": "./android.keystore",
-              "alias": "key",
-              "password": "android",
-              "keystorePassword": "android"
-            }
-          }
-          EOF
+      - name: 🔧 Generate Android project (no build)
+        run: |
+          cd twa
+          npx bubblewrap init --manifest ./twa-manifest.json --nonInteractive
 
       - name: 🔑 Generate signing key
         run: |
           cd twa
-          keytool -genkey -v -keystore android.keystore \
+          keytool -genkeypair -v \
+            -keystore android.keystore \
             -keyalg RSA -keysize 2048 -validity 10000 \
-            -alias key -storepass android -keypass android \
+            -alias key \
+            -storepass android -keypass android \
             -dname "CN=PowerTech, OU=Dev, O=PowerTech, L=MY, ST=MY, C=MY"
 
-      - name: 🏗️ Build APK (force non-interactive)
+      - name: 🏗️ Build APK using Gradle (no Bubblewrap)
         run: |
-          cd twa
-          yes "n" | npx bubblewrap build --skipPwaValidation
+          cd twa/android
+          ./gradlew assembleRelease
 
       - name: 📦 Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: PowerTech-OTT-Generator
-          path: twa/output/app-release.apk
+          path: twa/android/app/build/outputs/apk/release/app-release.apk
