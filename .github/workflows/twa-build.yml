@@ -1,5 +1,4 @@
-name: Build TWA APK
-
+name: Build TWA
 on:
   workflow_dispatch:
 
@@ -8,73 +7,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # --- Checkout ---
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      # --- Install Node ---
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      # --- Install Java 17 (prevent Bubblewrap asking Y/n) ---
       - name: Install JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 17
+          distribution: 'temurin'
+          java-version: '17'
 
-      # --- Install Bubblewrap CLI ---
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      # --- Create signing keystore (auto, no questions) ---
-      - name: Generate Android signing key
-        run: |
-          keytool -genkey -noprompt \
-            -alias key \
-            -dname "CN=PowerTech, OU=Dev, O=PowerTech, L=SG, S=SG, C=SG" \
-            -keystore android.keystore \
-            -storepass android \
-            -keypass android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000
+      - name: Create TWA folder
+        run: mkdir -p twa
 
-      # --- Auto-create TWA config folder ---
-      - name: Prepare TWA directory
+      - name: Initialize TWA (non-interactive)
+        working-directory: twa
         run: |
-          mkdir -p twa
-          cd twa
-          cp ../android.keystore ./android.keystore
-
-      # --- Initialize TWA (NO QUESTIONS, FULL AUTO) ---
-      - name: Init TWA (non-interactive)
-        run: |
-          cd twa
-          bubblewrap init \
+          yes "" | bubblewrap init \
             --manifest=https://powertech0417.github.io/generate_links/manifest.json \
-            --use-existing \
             --skip-requirements-check \
-            --skipJdk \
-            --nonInteractive
+            --use-existing
 
-          # Patch signing config
-          sed -i 's|"path": ""|"path": "android.keystore"|' twa-manifest.json || true
-
-      # --- Build APK ---
       - name: Build TWA
-        run: |
-          cd twa
-          bubblewrap build --skip-requirements-check --nonInteractive
+        working-directory: twa
+        run: bubblewrap build --skip-requirements-check
 
-          # Move APK out for upload
-          cp ./app-release-signed.apk ../app-release.apk
-
-      # --- Upload APK artifact ---
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PowerTech-OTT-Generator-APK
-          path: app-release.apk
+          name: twa-apk
+          path: twa/app-release-signed.apk
