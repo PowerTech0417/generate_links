@@ -51,12 +51,12 @@ jobs:
       - name: Initialize TWA (non-interactive)
         working-directory: twa
         run: |
-          cp ../config.json ./
+          ANDROID_HOME=$HOME/android-sdk \
           bubblewrap init \
             --manifest=https://powertech0417.github.io/generate_links/manifest.json \
             --skip-requirements-check \
-            --config=config.json \
-            --use-existing
+            --use-existing \
+            --no-input
 
       # Build TWA APK
       - name: Build TWA
