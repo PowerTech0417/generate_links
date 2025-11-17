@@ -1,0 +1,21 @@
+{
+  "packageId": "com.powertech.generate_links",
+  "host": "powertech0417.github.io",
+  "name": "PowerTech OTT 生成器",
+  "launcherName": "PowerTech OTT",
+  "themeColor": "#0a0f1c",
+  "navigationColor": "#0a0f1c",
+  "backgroundColor": "#0a0f1c",
+  "startUrl": "/generate_links/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "signingKey": {
+    "path": "powertech-release.keystore",
+    "alias": "powertech",
+    "storePassword": "PowerTech@2025",
+    "keyPassword": "PowerTech@2025"
+  },
+  "sha256Fingerprints": [
+    "9A:97:3B:46:5C:1A:67:19:2D:1F:5E:44:18:4F:22:1B:F1:6A:52:90:61:96:89:3F:7B:1D:54:42:8B:0B:0E:8C"
+  ]
+}
