@@ -25,23 +25,23 @@ jobs:
           wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
 
           unzip commandlinetools-linux-11076708_latest.zip -d $HOME/android-sdk/cmdline-tools/
-
           mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
 
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
 
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34"      
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-34"
+
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Prepare keystore
-        run: echo "Keystore ready."
-
       - name: Init TWA
         run: |
-          yes "" | bubblewrap init --manifest=https://powertech0417.github.io/generate_links/manifest.json --skip-requirements-check --use-existing
+          bubblewrap init \
+            --manifest=https://powertech0417.github.io/generate_links/manifest.json \
+            --skip-requirements-check \
+            --use-existing
 
       - name: Build TWA
         run: bubblewrap build --skip-requirements-check
