@@ -126,7 +126,10 @@
 
 <label>用户 UID</label>
 <input id="uid" placeholder="例如 user123">
-
+  
+<label>用户昵称 / 名字（将加入教程底部）</label>
+<input id="uname" placeholder="例如 Ken Ong">
+  
 <label>过期日期时间（马来西亚时间）</label>
 <input id="exp" type="datetime-local">
 
@@ -224,7 +227,7 @@ function toggleLang(lang) {
   const exp = new Date(document.getElementById("exp").value);
   const buyDate = formatDateMY(now);
   const expDate = formatDateMY(exp);
-const lastLine = `👤 User Name: ${uid}`;
+const lastLine = `👤 User Name: ${uname || "(未填写)"}`;
   let text = "";
   if (lang === "cn") {
     text = `🇨🇳 中文说明：
