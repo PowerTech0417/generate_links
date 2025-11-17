@@ -2,42 +2,22 @@
   "packageId": "com.powertech.generate_links",
   "host": "powertech0417.github.io",
   "name": "PowerTech OTT 生成器",
-  "launcherName": "OTT 生成器",
-  "startUrl": "https://powertech0417.github.io/generate_links/",
+  "launcherName": "PowerTech",
   "display": "standalone",
-  "themeColor": "#000000",
+  "themeColor": "#0a0f1c",
   "navigationColor": "#000000",
-  "backgroundColor": "#0a1a3a",
-  "fullScopeUrl": "https://powertech0417.github.io/generate_links/",
-  "generated": {
-    "version": "1.0.0",
-    "tools": {
-      "bubblewrap": "latest"
-    }
-  },
-  "signing": {
-    "path": "android.keystore",
-    "alias": "key",
-    "password": "android",
-    "keystorePassword": "android"
-  },
-  "android": {
-    "appVersionName": "1.0.0",
-    "appVersionCode": 1,
-    "fallbackType": "customtabs",
-    "orientation": "portrait",
-    "enableNotifications": false,
-    "enableSiteSettingsShortcut": false,
-    "minSdkVersion": 19,
-    "targetSdkVersion": 34,
-    "exportShortcut": true
-  },
-  "browsers": {
-    "fallback": {
-      "url": "https://powertech0417.github.io/generate_links/"
-    }
-  },
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "backgroundColor": "#000000",
+  "enableNotifications": false,
+  "fullScope": true,
+  "startUrl": "/generate_links/",
+  "orientation": "portrait",
+  "fingerprints": [],
   "features": {
-    "locationDelegation": false
+    "playBilling": false,
+    "locationDelegation": false,
+    "camera": true,
+    "mic": false
   }
 }
