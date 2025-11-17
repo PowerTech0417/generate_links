@@ -36,7 +36,9 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Init TWA
+      - name: Init TWA (Non-interactive)
+        env:
+          BUBBLEWRAP_CI: "1"
         run: |
           bubblewrap init \
             --manifest=https://powertech0417.github.io/generate_links/manifest.json \
@@ -44,6 +46,8 @@ jobs:
             --use-existing
 
       - name: Build TWA
+        env:
+          BUBBLEWRAP_CI: "1"
         run: bubblewrap build --skip-requirements-check
 
       - name: Upload APK
