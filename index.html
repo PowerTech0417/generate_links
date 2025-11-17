@@ -142,6 +142,7 @@
 
 <h3>🔗 短网址</h3>
 <pre id="shortOutput">(生成中...)</pre>
+<button id="copyLongBtn" class="hidden" onclick="copyLongURL()">📋 复制长链接</button>
 <button id="copyShortBtn" class="hidden" onclick="copyShortURL()">📋 复制短网址</button>
 <button id="copyDescBtn" class="hidden" onclick="copyDescription()">📄 复制说明文字</button>
 
@@ -203,9 +204,19 @@ async function generateFull() {
 
     // 显示长链（并确保输出区域可见）
     const outputEl = document.getElementById("output");
-    outputEl.textContent = longURL;
-    outputEl.classList.remove('hidden');
+    outputEl.textContent = longURL; // 保留长链，但不显示
+    document.getElementById("copyLongBtn").classList.remove('hidden'); // 显示复制按钮
 
+    async function copyLongURL() {
+    const text = document.getElementById("output").textContent.trim();
+    if (!text) return;
+    try {
+    await navigator.clipboard.writeText(text);
+    } catch (e) {
+    console.error(e);
+    }
+    }
+     
     // 调用短链服务
     const res = await fetch("https://short.ott-eaf.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
