@@ -25,7 +25,7 @@ jobs:
       - name: 🧱 Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: 🧩 Create config
+      - name: 🧩 Create manifest
         run: |
           mkdir -p twa
           cd twa
@@ -42,12 +42,12 @@ jobs:
           }
           EOF
 
-      - name: 🔧 Generate Android project (no build)
+      - name: 🔧 Generate Android project (NO build)
         run: |
           cd twa
           npx bubblewrap init --manifest ./twa-manifest.json --nonInteractive
 
-      - name: 🔑 Generate signing key
+      - name: 🔑 Signing key
         run: |
           cd twa
           keytool -genkeypair -v \
@@ -57,7 +57,7 @@ jobs:
             -storepass android -keypass android \
             -dname "CN=PowerTech, OU=Dev, O=PowerTech, L=MY, ST=MY, C=MY"
 
-      - name: 🏗️ Build APK using Gradle (no Bubblewrap)
+      - name: 🏗 Build APK using Gradle (NO bubblewrap build)
         run: |
           cd twa/android
           ./gradlew assembleRelease
