@@ -1,6 +1,9 @@
-name: Build TWA
+name: Build TWA APK
+
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
   build:
@@ -10,53 +13,31 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Java 17
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Install JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Install Android SDK
+      # ↓↓↓ 关键：自动回答 init ↓↓↓
+      - name: Run bubblewrap init (auto yes)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip
+          yes "" | bubblewrap init \
+            --manifest=https://powertech0417.github.io/generate_links/manifest.json
 
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-
-          unzip commandlinetools-linux-11076708_latest.zip -d $HOME/android-sdk/cmdline-tools/
-          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
-
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-34"
-
-      - name: Install latest Bubblewrap (force upgrade)
-        run: |
-          npm uninstall -g @bubblewrap/cli || true
-          npm install -g @bubblewrap/cli@latest
-          bubblewrap --version
-
-      - name: Init TWA (CI mode)
-        env:
-          ANDROID_HOME: ${{ github.workspace }}/../android-sdk
-          BUBBLEWRAP_CI: "1"
-        run: |
-          bubblewrap init \
-            --manifest=https://powertech0417.github.io/generate_links/manifest.json \
-            --skip-requirements-check \
-            --use-existing \
-            --ci
-
-      - name: Build TWA
-        env:
-          BUBBLEWRAP_CI: "1"
-        run: bubblewrap build --ci --skip-requirements-check
+      - name: Build project
+        run: bubblewrap build
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
-          path: app-release-signed.apk
+          name: twa-apk
+          path: ./app-release-signed.apk
