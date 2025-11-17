@@ -7,6 +7,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      BUBBLEWRAP_SKIP_INSTALL_JDK: true
+      BUBBLEWRAP_FEATURES_UPDATE_NOTIFICATIONS: false
+      BUBBLEWRAP_NON_INTERACTIVE: true
+
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
@@ -29,7 +34,6 @@ jobs:
         run: |
           mkdir -p twa
           cd twa
-          echo "✅ Creating twa-manifest.json & config.json manually"
           cat > twa-manifest.json <<'EOF'
           {
             "packageId": "com.powertech.generate_links",
@@ -70,7 +74,6 @@ jobs:
       - name: 🔑 Generate signing key
         run: |
           cd twa
-          echo "🔐 Generating Android signing key..."
           keytool -genkey -v -keystore android.keystore \
             -keyalg RSA -keysize 2048 -validity 10000 \
             -alias key -storepass android -keypass android \
@@ -79,8 +82,7 @@ jobs:
       - name: 🏗️ Build APK
         run: |
           cd twa
-          echo "✅ Building signed APK..."
-          npx bubblewrap build --nonInteractive --skipPwaValidation
+          npx bubblewrap build --nonInteractive --skipPwaValidation --skip-install-jdk
 
       - name: 📦 Upload APK artifact
         uses: actions/upload-artifact@v4
