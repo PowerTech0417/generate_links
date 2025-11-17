@@ -33,18 +33,26 @@ jobs:
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-34"
 
-      - name: Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
+      - name: Install latest Bubblewrap (force upgrade)
+        run: |
+          npm uninstall -g @bubblewrap/cli || true
+          npm install -g @bubblewrap/cli@latest
+          bubblewrap --version
 
-      - name: Init TWA (full CI mode)
+      - name: Init TWA (CI mode)
+        env:
+          ANDROID_HOME: ${{ github.workspace }}/../android-sdk
+          BUBBLEWRAP_CI: "1"
         run: |
           bubblewrap init \
-            --ci \
             --manifest=https://powertech0417.github.io/generate_links/manifest.json \
             --skip-requirements-check \
-            --use-existing
+            --use-existing \
+            --ci
 
       - name: Build TWA
+        env:
+          BUBBLEWRAP_CI: "1"
         run: bubblewrap build --ci --skip-requirements-check
 
       - name: Upload APK
