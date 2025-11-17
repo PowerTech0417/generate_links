@@ -1,0 +1,40 @@
+name: Build TWA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Init TWA
+        run: |
+          bubblewrap init \
+            --manifest=https://powertech0417.github.io/generate_links/manifest.json \
+            --use-existing \
+            --skip-requirements-check
+
+      - name: Build TWA
+        run: |
+          bubblewrap build --skip-requirements-check
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release-apk
+          path: ./twa/app-release-signed.apk
