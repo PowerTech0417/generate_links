@@ -1,0 +1,22 @@
+{
+  "packageId": "com.powertech.generate_links",
+  "host": "powertech0417.github.io",
+  "name": "PowerTech OTT 生成器",
+  "launcherName": "PowerTech 生成器",
+  "display": "standalone",
+  "themeColor": "#0a0f1c",
+  "backgroundColor": "#0a0f1c",
+  "startUrl": "/generate_links/",
+  "iconUrl": "https://powertech0417.github.io/generate_links/icon-512.png",
+  "splashScreenFadeOutDuration": 200,
+  "enableNotifications": false,
+  "orientation": "portrait",
+  "fullScopeUrl": "https://powertech0417.github.io/generate_links/",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "signingKey": {
+    "path": "android.keystore",
+    "alias": "my-key"
+  }
+}
