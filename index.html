@@ -224,7 +224,7 @@ function toggleLang(lang) {
   const exp = new Date(document.getElementById("exp").value);
   const buyDate = formatDateMY(now);
   const expDate = formatDateMY(exp);
-const lastLine = `👤 用户 / Name / Nama: ${uid || "(未填写)"}`;
+const lastLine = `👤 User Name: ${uid}`;
   let text = "";
   if (lang === "cn") {
     text = `🇨🇳 中文说明：
@@ -260,7 +260,7 @@ const lastLine = `👤 用户 / Name / Nama: ${uid || "(未填写)"}`;
 🚫 别用其他设备打开 ID 链接，会自动封禁！
 
 🕒 购买日期（MYT）：${buyDate}
-📅 到期日期（MYT）：${expDate}\n\n${lastLine}`;
+📅 到期日期（MYT）：${expDate}\n${lastLine}`;
   } else if (lang === "en") {
     text = `🇬🇧 English Instructions:
 
@@ -294,7 +294,7 @@ Download one of the following apps:
 🚫 Do NOT open the ID link on other devices — it will be auto-banned!
 
 🕒 Purchase Date (MYT): ${buyDate}
-📅 Expiry Date (MYT): ${expDate}\n\n${lastLine}`;
+📅 Expiry Date (MYT): ${expDate}\n${lastLine}`;
   } else {
     text = `🇲🇾 Bahasa Melayu:
 
@@ -328,7 +328,7 @@ Pasang salah satu aplikasi berikut:
 🚫 Jangan buka pautan ID pada peranti lain — ia akan diharamkan secara automatik!
 
 🕒 Tarikh Pembelian (MYT): ${buyDate}
-📅 Tarikh Tamat (MYT): ${expDate}\n\n${lastLine}`;
+📅 Tarikh Tamat (MYT): ${expDate}\n${lastLine}`;
   }
 
   const desc = document.getElementById("desc");
