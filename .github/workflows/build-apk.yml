@@ -1,69 +1,7 @@
-name: 📦 Build PWA Android APK
+- name: Build TWA
+  run: |
+    npm install -g @bubblewrap/cli
 
-on:
-  workflow_dispatch:
+    bubblewrap init --manifest=https://powertech0417.github.io/generate_links/manifest.json --use-existing --skip-requirements-check
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: ☕ Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: 🧱 Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
-
-      - name: 🧩 Create manifest
-        run: |
-          mkdir -p twa
-          cd twa
-          cat > twa-manifest.json <<'EOF'
-          {
-            "packageId": "com.powertech.generate_links",
-            "name": "PowerTech OTT 生成器",
-            "startUrl": "https://powertech0417.github.io/generate_links/",
-            "display": "standalone",
-            "themeColor": "#000000",
-            "backgroundColor": "#0a1a3a",
-            "iconUrl": "https://raw.githubusercontent.com/PowerTech0417/generate_links/refs/heads/main/icon-512.png",
-            "fullScopeUrl": "https://powertech0417.github.io/generate_links/"
-          }
-          EOF
-
-      - name: 🔧 Generate Android project (NO build)
-        run: |
-          cd twa
-          npx bubblewrap init --manifest ./twa-manifest.json --nonInteractive
-
-      - name: 🔑 Signing key
-        run: |
-          cd twa
-          keytool -genkeypair -v \
-            -keystore android.keystore \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -alias key \
-            -storepass android -keypass android \
-            -dname "CN=PowerTech, OU=Dev, O=PowerTech, L=MY, ST=MY, C=MY"
-
-      - name: 🏗 Build APK using Gradle (NO bubblewrap build)
-        run: |
-          cd twa/android
-          ./gradlew assembleRelease
-
-      - name: 📦 Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: PowerTech-OTT-Generator
-          path: twa/android/app/build/outputs/apk/release/app-release.apk
+    bubblewrap build --skip-requirements-check
