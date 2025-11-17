@@ -7,11 +7,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      BUBBLEWRAP_SKIP_INSTALL_JDK: true
-      BUBBLEWRAP_FEATURES_UPDATE_NOTIFICATIONS: false
-      BUBBLEWRAP_NON_INTERACTIVE: true
-
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
@@ -79,12 +74,12 @@ jobs:
             -alias key -storepass android -keypass android \
             -dname "CN=PowerTech, OU=Dev, O=PowerTech, L=MY, ST=MY, C=MY"
 
-      - name: 🏗️ Build APK
+      - name: 🏗️ Build APK (force non-interactive)
         run: |
           cd twa
-          npx bubblewrap build --nonInteractive --skipPwaValidation --skip-install-jdk
+          yes "n" | npx bubblewrap build --skipPwaValidation
 
-      - name: 📦 Upload APK artifact
+      - name: 📦 Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: PowerTech-OTT-Generator
