@@ -161,7 +161,6 @@ function getMalaysiaNow() {
   const now = new Date();
   return new Date(now.getTime() + 8 * 60 * 60 * 1000);
 }
-
 function setExpiryMonths(months) {
   const expInput = document.getElementById("exp");
   const malaysiaNow = getMalaysiaNow();
@@ -169,7 +168,6 @@ function setExpiryMonths(months) {
   else malaysiaNow.setMonth(malaysiaNow.getMonth() + months);
   expInput.value = malaysiaNow.toISOString().slice(0,16);
 }
-
 async function hmacSHA256(text, secret) {
   const key = await crypto.subtle.importKey(
     "raw", new TextEncoder().encode(secret),
@@ -179,10 +177,8 @@ async function hmacSHA256(text, secret) {
   const sigBuf = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(text));
   return Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
-
 async function generateFull() {
   try {
-    // 安全读取 uid 与 exp
     const uidEl = document.getElementById("uid");
     const uid = uidEl && typeof uidEl.value === 'string' ? uidEl.value.trim() : '';
     const secret = document.getElementById("secret").value.trim();
@@ -192,74 +188,50 @@ async function generateFull() {
       alert("请填写 UID 与 到期时间。");
       return;
     }
-
-    // 解析到期时间（注意：datetime-local 返回本地时间）
     const expLocal = new Date(expStr);
-    // 如果你想得到 UTC 毫秒，可以用:
     const expMillis = expLocal.getTime();
-
     const text = `${uid}:${expMillis}`;
     const sig = await hmacSHA256(text, secret);
     const longURL = `${domain}?uid=${encodeURIComponent(uid)}&exp=${expMillis}&sig=${sig}`;
 
-    // 显示长链（并确保输出区域可见）
-    const outputEl = document.getElementById("output");
-    outputEl.textContent = longURL; // 保留长链，但不显示
-    document.getElementById("copyLongBtn").classList.remove('hidden'); // 显示复制按钮
+    document.getElementById("output").textContent = longURL;
+    document.getElementById("copyLongBtn").classList.remove('hidden');
 
-    async function copyLongURL() {
-  const text = document.getElementById("output").textContent.trim();
-  if (!text) return;
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch (e) {}
-}
-     
-    // 调用短链服务
     const res = await fetch("https://short.ott-eaf.workers.dev/", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ longURL })
     });
     const data = await res.json();
-
     if (data.shortURL) {
       document.getElementById("shortOutput").textContent = data.shortURL;
       document.getElementById("copyShortBtn").classList.remove('hidden');
       document.getElementById("copyDescBtn").classList.remove('hidden');
     } else {
-      console.warn("短链服务未返回 shortURL:", data);
       alert("短链服务未返回短网址，请检查服务。");
     }
   } catch (err) {
-    console.error("Error:", err);
     alert("生成短链时发生错误，请查看控制台。");
   }
 }
-
 function formatDateMY(date) {
   return date.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kuala_Lumpur" });
 }
-
 function toggleLang(lang) {
   const shortURL = document.getElementById("shortOutput").textContent.trim();
   if (!shortURL || shortURL.includes("(生成中")) {
     alert("请先生成短网址！");
     return;
   }
-
-  // 安全读取 uid（直接把 uid 当成用户名）
   const uidEl = document.getElementById("uid");
   const uid = uidEl && typeof uidEl.value === 'string' ? uidEl.value.trim() : '';
-
   const now = getMalaysiaNow();
   const expInputValue = document.getElementById("exp").value;
   const exp = expInputValue ? new Date(expInputValue) : now;
   const buyDate = formatDateMY(now);
   const expDate = formatDateMY(exp);
-
   const lastLine = `👤 User Name: ${uid || "(未填写)"}`;
 
-  let text = "";
+    let text = "";
   if (lang === "cn") {
     text = `🇨🇳 中文说明：
 
